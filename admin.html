@@ -342,6 +342,20 @@
     return partes[2] + "/" + partes[1] + "/" + partes[0];
   }
 
+  // ===== LINK DE CONFIRMAÇÃO NO WHATSAPP =====
+  function linkConfirmacao(r) {
+    const telLimpo = (r.telefone || "").replace(/\D/g, "");
+    const mensagem =
+      "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa 🔥\n\n" +
+      "Sua reserva está CONFIRMADA ✅\n\n" +
+      "📅 Data: " + formatarData(r.data_reserva) + "\n" +
+      "🕗 Horário: " + r.horario.slice(0, 5) + "\n" +
+      "👥 Pessoas: " + r.num_pessoas + "\n\n" +
+      "Te esperamos! 🍖\n" +
+      "Av. Senador Paulo Pessoa Guerra, 112 – Surubim/PE";
+    return "https://wa.me/55" + telLimpo + "?text=" + encodeURIComponent(mensagem);
+  }
+
   // ===== DESENHAR LISTA =====
   function desenharLista() {
     const hoje = dataHojeISO();
@@ -394,7 +408,13 @@
 
     lista.querySelectorAll("button[data-acao]").forEach(function (b) {
       b.addEventListener("click", function () {
-        mudarStatus(b.dataset.id, b.dataset.acao, b);
+        // Abre a janela AGORA (durante o clique) para o navegador não bloquear o pop-up.
+        // O endereço do WhatsApp só é colocado nela depois que o banco confirmar.
+        let janelaWhats = null;
+        if (b.dataset.acao === "confirmada") {
+          janelaWhats = window.open("about:blank", "_blank");
+        }
+        mudarStatus(b.dataset.id, b.dataset.acao, b, janelaWhats);
       });
     });
   }
@@ -406,7 +426,7 @@
   }
 
   // ===== MUDAR STATUS =====
-  async function mudarStatus(id, novoStatus, botao) {
+  async function mudarStatus(id, novoStatus, botao, janelaWhats) {
     botao.disabled = true;
     try {
       const resp = await fetch(SUPABASE_URL + "/rest/v1/reservas?id=eq." + id, {
@@ -422,8 +442,17 @@
       if (!resp.ok) throw new Error("Erro " + resp.status);
       const r = reservas.find(function (x) { return x.id === id; });
       if (r) r.status = novoStatus;
+
+      // Confirmou no banco → manda a janela para o WhatsApp com a mensagem pronta
+      if (novoStatus === "confirmada" && r && janelaWhats) {
+        janelaWhats.location.href = linkConfirmacao(r);
+      } else if (janelaWhats) {
+        janelaWhats.close();
+      }
+
       desenharLista();
     } catch (err) {
+      if (janelaWhats) janelaWhats.close();
       alert("Não foi possível atualizar. Faça login de novo e tente outra vez.");
       botao.disabled = false;
     }
