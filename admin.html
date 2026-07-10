@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Reservas — Boi na Brasa</title>
+<title>Painel de Reservas &mdash; Boi na Brasa</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -154,6 +154,10 @@
     margin-top:6px;font-size:.9rem;color:var(--cinza);
     font-style:italic;
   }
+  .fiel{
+    margin-top:5px;font-size:.85rem;font-weight:600;
+    color:var(--amarelo);
+  }
   .badge{
     display:inline-block;
     font-family:'Barlow Condensed',sans-serif;
@@ -177,6 +181,42 @@
   .b-cancelar{background:transparent;color:#FF8A5C;border-color:rgba(201,58,15,.6)}
   .b-whats{background:transparent;color:var(--amarelo);border-color:rgba(247,179,43,.5);text-decoration:none;display:inline-block}
   .acoes button:hover,.b-whats:hover{filter:brightness(1.15)}
+
+  /* ---------- TABELAS (PLANILHA / CLIENTES) ---------- */
+  .tabela-wrap{
+    overflow-x:auto;
+    border:1px solid rgba(255,248,238,.1);
+    border-radius:10px;
+    background:var(--carvao);
+  }
+  table.tabela{width:100%;border-collapse:collapse;min-width:640px}
+  .tabela th{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.85rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--amarelo);text-align:left;
+    padding:12px 14px;
+    background:var(--fumaca);
+    border-bottom:1px solid rgba(247,179,43,.25);
+    white-space:nowrap;
+  }
+  .tabela td{
+    padding:11px 14px;font-size:.95rem;
+    border-bottom:1px solid rgba(255,248,238,.07);
+  }
+  .tabela tr:last-child td{border-bottom:none}
+  .btn-csv{
+    margin-top:14px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:1rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--preto);
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    border:none;border-radius:6px;
+    padding:11px 20px;cursor:pointer;
+  }
+  .btn-csv:hover{filter:brightness(1.1)}
+
   #vazio{
     display:none;text-align:center;color:var(--cinza);
     padding:50px 20px;
@@ -201,7 +241,7 @@
 <section id="tela-login">
   <div class="container">
     <div class="card-login">
-      <h1>Área da equipe 🔐</h1>
+      <h1>&Aacute;rea da equipe &#x1F510;</h1>
       <p>Entre com seu e-mail e senha cadastrados no Supabase.</p>
       <form id="form-login">
         <label for="email">E-mail</label>
@@ -223,11 +263,13 @@
       <button class="filtro" data-filtro="pendente">Pendentes</button>
       <button class="filtro" data-filtro="confirmada">Confirmadas</button>
       <button class="filtro" data-filtro="todas">Todas</button>
+      <button class="filtro" data-filtro="planilha">Planilha</button>
+      <button class="filtro" data-filtro="clientes">Clientes</button>
     </div>
     <div id="contador"></div>
     <div id="carregando">Carregando reservas...</div>
     <div id="lista"></div>
-    <div id="vazio">Nenhuma reserva por aqui ainda. 🍽️</div>
+    <div id="vazio">Nenhuma reserva por aqui ainda. &#x1F37D;&#xFE0F;</div>
   </div>
 </section>
 
@@ -235,6 +277,15 @@
   // ===== CONFIGURAÇÃO =====
   const SUPABASE_URL = "https://hysnhjzngbrrjrqczmxi.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5c25oanpuZ2JycmpycWN6bXhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NTc2MTksImV4cCI6MjA5OTEzMzYxOX0.vBDuJmogatj2HyetGhSmu3z1q5S7S_OPCDNF49vZAQo";
+
+  // Emojis escritos em código unicode para nunca corromperem
+  const E_FOGO = "\uD83D\uDD25";      // fogo
+  const E_CHECK = "\u2705";           // confirmado
+  const E_DATA = "\uD83D\uDCC5";      // calendário
+  const E_HORA = "\uD83D\uDD57";      // relógio
+  const E_PESSOAS = "\uD83D\uDC65";   // pessoas
+  const E_CARNE = "\uD83C\uDF56";     // carne
+  const E_ESTRELA = "\u2B50";         // estrela
 
   let tokenAcesso = null;
   let filtroAtual = "hoje";
@@ -342,22 +393,34 @@
     return partes[2] + "/" + partes[1] + "/" + partes[0];
   }
 
+  function telDe(r) {
+    return (r.telefone || "").replace(/\D/g, "");
+  }
+
+  // Quantas reservas esse telefone já fez (histórico do cliente)
+  function historicoCliente(tel) {
+    return reservas.filter(function (x) { return telDe(x) === tel; }).length;
+  }
+
   // ===== LINK DE CONFIRMAÇÃO NO WHATSAPP =====
   function linkConfirmacao(r) {
-    const telLimpo = (r.telefone || "").replace(/\D/g, "");
+    const telLimpo = telDe(r);
     const mensagem =
-      "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa 🔥\n\n" +
-      "Sua reserva está CONFIRMADA ✅\n\n" +
-      "📅 Data: " + formatarData(r.data_reserva) + "\n" +
-      "🕗 Horário: " + r.horario.slice(0, 5) + "\n" +
-      "👥 Pessoas: " + r.num_pessoas + "\n\n" +
-      "Te esperamos! 🍖\n" +
-      "Av. Senador Paulo Pessoa Guerra, 112 – Surubim/PE";
+      "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + "\n\n" +
+      "Sua reserva está CONFIRMADA " + E_CHECK + "\n\n" +
+      E_DATA + " Data: " + formatarData(r.data_reserva) + "\n" +
+      E_HORA + " Horário: " + r.horario.slice(0, 5) + "\n" +
+      E_PESSOAS + " Pessoas: " + r.num_pessoas + "\n\n" +
+      "Te esperamos! " + E_CARNE + "\n" +
+      "Av. Senador Paulo Pessoa Guerra, 112 \u2013 Surubim/PE";
     return "https://wa.me/55" + telLimpo + "?text=" + encodeURIComponent(mensagem);
   }
 
-  // ===== DESENHAR LISTA =====
+  // ===== DESENHAR (decide qual visão mostrar) =====
   function desenharLista() {
+    if (filtroAtual === "planilha") { desenharPlanilha(); return; }
+    if (filtroAtual === "clientes") { desenharClientes(); return; }
+
     const hoje = dataHojeISO();
     let filtradas = reservas;
     if (filtroAtual === "hoje") {
@@ -374,21 +437,22 @@
       const div = document.createElement("div");
       div.className = "cartao " + r.status;
 
-      const telLimpo = (r.telefone || "").replace(/\D/g, "");
+      const telLimpo = telDe(r);
+      const vezes = historicoCliente(telLimpo);
       const linkWhats = "https://wa.me/55" + telLimpo +
         "?text=" + encodeURIComponent(
-          "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa 🔥 Sobre sua reserva de " +
+          "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + " Sobre sua reserva de " +
           formatarData(r.data_reserva) + " às " + r.horario.slice(0,5) + " para " + r.num_pessoas + " pessoa(s):"
         );
 
       let botoes = "";
       if (r.status === "pendente") {
-        botoes = '<button class="b-confirmar" data-id="' + r.id + '" data-acao="confirmada">✓ Confirmar</button>' +
-                 '<button class="b-cancelar" data-id="' + r.id + '" data-acao="cancelada">✕ Cancelar</button>';
+        botoes = '<button class="b-confirmar" data-id="' + r.id + '" data-acao="confirmada">\u2713 Confirmar</button>' +
+                 '<button class="b-cancelar" data-id="' + r.id + '" data-acao="cancelada">\u2715 Cancelar</button>';
       } else if (r.status === "confirmada") {
-        botoes = '<button class="b-cancelar" data-id="' + r.id + '" data-acao="cancelada">✕ Cancelar</button>';
+        botoes = '<button class="b-cancelar" data-id="' + r.id + '" data-acao="cancelada">\u2715 Cancelar</button>';
       } else {
-        botoes = '<button class="b-confirmar" data-id="' + r.id + '" data-acao="pendente">↩ Reativar</button>';
+        botoes = '<button class="b-confirmar" data-id="' + r.id + '" data-acao="pendente">\u21A9 Reativar</button>';
       }
 
       div.innerHTML =
@@ -396,7 +460,8 @@
           '<span class="badge ' + r.status + '">' + r.status + '</span>' +
           '<div class="nome-cliente">' + escapar(r.nome) + '</div>' +
           '<div class="detalhes"><strong>' + formatarData(r.data_reserva) + '</strong> às <strong>' + r.horario.slice(0,5) + '</strong> · ' + r.num_pessoas + ' pessoa(s) · ' + escapar(r.telefone) + '</div>' +
-          (r.observacoes ? '<div class="obs">“' + escapar(r.observacoes) + '”</div>' : '') +
+          (r.observacoes ? '<div class="obs">\u201C' + escapar(r.observacoes) + '\u201D</div>' : '') +
+          (vezes > 1 ? '<div class="fiel">' + E_ESTRELA + ' Cliente com ' + vezes + ' reservas conosco</div>' : '') +
         '</div>' +
         '<div class="acoes">' +
           '<a class="b-whats" href="' + linkWhats + '" target="_blank" rel="noopener">WhatsApp</a>' +
@@ -417,6 +482,97 @@
         mudarStatus(b.dataset.id, b.dataset.acao, b, janelaWhats);
       });
     });
+  }
+
+  // ===== PLANILHA DE CONFIRMADAS =====
+  function desenharPlanilha() {
+    const confirmadas = reservas.filter(function (r) { return r.status === "confirmada"; });
+    contador.textContent = confirmadas.length + (confirmadas.length === 1 ? " reserva confirmada" : " reservas confirmadas");
+    vazio.style.display = confirmadas.length === 0 ? "block" : "none";
+    if (confirmadas.length === 0) { lista.innerHTML = ""; return; }
+
+    let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
+      '<th>Data</th><th>Hora</th><th>Nome</th><th>Telefone</th><th>Pessoas</th><th>Observações</th>' +
+      '</tr></thead><tbody>';
+    confirmadas.forEach(function (r) {
+      html += '<tr>' +
+        '<td>' + formatarData(r.data_reserva) + '</td>' +
+        '<td>' + r.horario.slice(0, 5) + '</td>' +
+        '<td>' + escapar(r.nome) + '</td>' +
+        '<td>' + escapar(r.telefone) + '</td>' +
+        '<td>' + r.num_pessoas + '</td>' +
+        '<td>' + escapar(r.observacoes || "") + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div>' +
+      '<button class="btn-csv" id="btn-csv">\u2B07 Baixar planilha (Excel/CSV)</button>';
+
+    lista.innerHTML = html;
+    document.getElementById("btn-csv").addEventListener("click", function () {
+      baixarCSV(confirmadas);
+    });
+  }
+
+  function baixarCSV(linhas) {
+    let csv = "\uFEFFData;Hora;Nome;Telefone;Pessoas;Observacoes\r\n";
+    linhas.forEach(function (r) {
+      csv += [
+        formatarData(r.data_reserva),
+        r.horario.slice(0, 5),
+        r.nome,
+        r.telefone,
+        r.num_pessoas,
+        r.observacoes || ""
+      ].map(function (c) {
+        return '"' + String(c).replace(/"/g, '""') + '"';
+      }).join(";") + "\r\n";
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "reservas-confirmadas.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ===== CLIENTES (HISTÓRICO) =====
+  function desenharClientes() {
+    const mapa = {};
+    reservas.forEach(function (r) {
+      const tel = telDe(r);
+      if (!tel) return;
+      if (!mapa[tel]) {
+        mapa[tel] = { nome: r.nome, telefone: r.telefone, total: 0, confirmadas: 0, ultima: r.data_reserva };
+      }
+      mapa[tel].total++;
+      if (r.status === "confirmada") mapa[tel].confirmadas++;
+      if (r.data_reserva > mapa[tel].ultima) mapa[tel].ultima = r.data_reserva;
+      mapa[tel].nome = r.nome; // mantém o nome mais recente
+    });
+
+    const clientes = Object.keys(mapa).map(function (k) { return mapa[k]; });
+    clientes.sort(function (a, b) { return b.total - a.total; });
+
+    contador.textContent = clientes.length + (clientes.length === 1 ? " cliente" : " clientes");
+    vazio.style.display = clientes.length === 0 ? "block" : "none";
+    if (clientes.length === 0) { lista.innerHTML = ""; return; }
+
+    let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
+      '<th>Cliente</th><th>Telefone</th><th>Reservas</th><th>Confirmadas</th><th>Última reserva</th>' +
+      '</tr></thead><tbody>';
+    clientes.forEach(function (c) {
+      html += '<tr>' +
+        '<td>' + (c.total > 1 ? E_ESTRELA + " " : "") + escapar(c.nome) + '</td>' +
+        '<td>' + escapar(c.telefone) + '</td>' +
+        '<td>' + c.total + '</td>' +
+        '<td>' + c.confirmadas + '</td>' +
+        '<td>' + formatarData(c.ultima) + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div>';
+    lista.innerHTML = html;
   }
 
   function escapar(texto) {
@@ -443,7 +599,7 @@
       const r = reservas.find(function (x) { return x.id === id; });
       if (r) r.status = novoStatus;
 
-      // Confirmou no banco → manda a janela para o WhatsApp com a mensagem pronta
+      // Confirmou no banco \u2192 manda a janela para o WhatsApp com a mensagem pronta
       if (novoStatus === "confirmada" && r && janelaWhats) {
         janelaWhats.location.href = linkConfirmacao(r);
       } else if (janelaWhats) {
