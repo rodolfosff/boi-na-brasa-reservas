@@ -402,6 +402,17 @@
     return reservas.filter(function (x) { return telDe(x) === tel; }).length;
   }
 
+  // Monta o link do WhatsApp do jeito certo para cada aparelho:
+  // - celular: wa.me (abre o app do celular, emojis funcionam)
+  // - computador: WhatsApp Web (o app de computador tem um bug que quebra emojis)
+  function linkZap(telLimpo, mensagem) {
+    const ehCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (ehCelular) {
+      return "https://wa.me/55" + telLimpo + "?text=" + encodeURIComponent(mensagem);
+    }
+    return "https://web.whatsapp.com/send?phone=55" + telLimpo + "&text=" + encodeURIComponent(mensagem);
+  }
+
   // ===== LINK DE CONFIRMAÇÃO NO WHATSAPP =====
   function linkConfirmacao(r) {
     const telLimpo = telDe(r);
@@ -413,7 +424,7 @@
       E_PESSOAS + " Pessoas: " + r.num_pessoas + "\n\n" +
       "Te esperamos! " + E_CARNE + "\n" +
       "Av. Senador Paulo Pessoa Guerra, 112 \u2013 Surubim/PE";
-    return "https://wa.me/55" + telLimpo + "?text=" + encodeURIComponent(mensagem);
+    return linkZap(telLimpo, mensagem);
   }
 
   // ===== DESENHAR (decide qual visão mostrar) =====
@@ -439,11 +450,10 @@
 
       const telLimpo = telDe(r);
       const vezes = historicoCliente(telLimpo);
-      const linkWhats = "https://wa.me/55" + telLimpo +
-        "?text=" + encodeURIComponent(
-          "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + " Sobre sua reserva de " +
-          formatarData(r.data_reserva) + " às " + r.horario.slice(0,5) + " para " + r.num_pessoas + " pessoa(s):"
-        );
+      const linkWhats = linkZap(telLimpo,
+        "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + " Sobre sua reserva de " +
+        formatarData(r.data_reserva) + " às " + r.horario.slice(0,5) + " para " + r.num_pessoas + " pessoa(s):"
+      );
 
       let botoes = "";
       if (r.status === "pendente") {
