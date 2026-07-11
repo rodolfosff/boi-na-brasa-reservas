@@ -216,6 +216,9 @@
     padding:11px 20px;cursor:pointer;
   }
   .btn-csv:hover{filter:brightness(1.1)}
+  .linha-cliente{cursor:pointer}
+  .linha-cliente:hover td{background:rgba(247,179,43,.07)}
+  .nome-link{color:var(--amarelo);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 
   #vazio{
     display:none;text-align:center;color:var(--cinza);
@@ -299,6 +302,43 @@
   const carregando = document.getElementById("carregando");
   const contador = document.getElementById("contador");
 
+  // ===== SESSÃO SALVA (login vale por 1 hora) =====
+  const SESSAO_DURACAO_MS = 60 * 60 * 1000; // 1 hora
+
+  function salvarSessao(token) {
+    try {
+      localStorage.setItem("bnb_token", token);
+      localStorage.setItem("bnb_expira", String(Date.now() + SESSAO_DURACAO_MS));
+    } catch (e) {}
+  }
+  function limparSessao() {
+    try {
+      localStorage.removeItem("bnb_token");
+      localStorage.removeItem("bnb_expira");
+    } catch (e) {}
+  }
+  function sessaoSalva() {
+    try {
+      const t = localStorage.getItem("bnb_token");
+      const exp = parseInt(localStorage.getItem("bnb_expira") || "0", 10);
+      if (t && Date.now() < exp) return t;
+    } catch (e) {}
+    return null;
+  }
+  function entrarNoPainel() {
+    telaLogin.style.display = "none";
+    telaPainel.style.display = "block";
+    btnSair.style.display = "inline-block";
+    carregarReservas();
+  }
+  function voltarAoLogin() {
+    limparSessao();
+    tokenAcesso = null;
+    telaPainel.style.display = "none";
+    btnSair.style.display = "none";
+    telaLogin.style.display = "block";
+  }
+
   // ===== LOGIN =====
   document.getElementById("form-login").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -325,10 +365,8 @@
         throw new Error(dados.error_description || "Login inválido");
       }
       tokenAcesso = dados.access_token;
-      telaLogin.style.display = "none";
-      telaPainel.style.display = "block";
-      btnSair.style.display = "inline-block";
-      carregarReservas();
+      salvarSessao(tokenAcesso);
+      entrarNoPainel();
     } catch (err) {
       erro.textContent = "E-mail ou senha incorretos. Tente de novo.";
       erro.style.display = "block";
@@ -340,12 +378,16 @@
 
   // ===== SAIR =====
   btnSair.addEventListener("click", function () {
-    tokenAcesso = null;
-    telaPainel.style.display = "none";
-    btnSair.style.display = "none";
-    telaLogin.style.display = "block";
+    voltarAoLogin();
     document.getElementById("senha").value = "";
   });
+
+  // Se já logou há menos de 1 hora, entra direto sem pedir senha
+  const tokenGuardado = sessaoSalva();
+  if (tokenGuardado) {
+    tokenAcesso = tokenGuardado;
+    entrarNoPainel();
+  }
 
   // ===== CARREGAR RESERVAS =====
   async function carregarReservas() {
@@ -362,6 +404,7 @@
           }
         }
       );
+      if (resp.status === 401) { voltarAoLogin(); return; }
       if (!resp.ok) throw new Error("Erro " + resp.status);
       reservas = await resp.json();
       desenharLista();
@@ -416,13 +459,21 @@
   // ===== LINK DE CONFIRMAÇÃO NO WHATSAPP =====
   function linkConfirmacao(r) {
     const telLimpo = telDe(r);
-    const mensagem =
+    const hor = r.horario.slice(0, 5);
+    let mensagem =
       "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + "\n\n" +
       "Sua reserva está CONFIRMADA " + E_CHECK + "\n\n" +
       E_DATA + " Data: " + formatarData(r.data_reserva) + "\n" +
-      E_HORA + " Horário: " + r.horario.slice(0, 5) + "\n" +
-      E_PESSOAS + " Pessoas: " + r.num_pessoas + "\n\n" +
-      "Te esperamos! " + E_CARNE + "\n" +
+      E_HORA + " Horário: " + hor + "\n" +
+      E_PESSOAS + " Pessoas: " + r.num_pessoas;
+
+    // Reservas entre 20h e 21h30: aviso de tolerância de 30 minutos
+    if (hor >= "20:00" && hor <= "21:30") {
+      mensagem += "\n\n\u23F0 Importante: seguramos sua mesa por até 30 minutos após o horário marcado. Passado esse prazo, a reserva poderá ser liberada para outros clientes.";
+    }
+
+    mensagem +=
+      "\n\nTe esperamos! " + E_CARNE + "\n" +
       "Av. Senador Paulo Pessoa Guerra, 112 \u2013 Surubim/PE";
     return linkZap(telLimpo, mensagem);
   }
@@ -515,36 +566,32 @@
       '</tr>';
     });
     html += '</tbody></table></div>' +
-      '<button class="btn-csv" id="btn-csv">\u2B07 Baixar planilha (Excel/CSV)</button>';
+      '<button class="btn-csv" id="btn-sheets">Abrir no Google Sheets</button>';
 
     lista.innerHTML = html;
-    document.getElementById("btn-csv").addEventListener("click", function () {
-      baixarCSV(confirmadas);
+    document.getElementById("btn-sheets").addEventListener("click", function () {
+      abrirNoGoogleSheets(confirmadas);
     });
   }
 
-  function baixarCSV(linhas) {
-    let csv = "\uFEFFData;Hora;Nome;Telefone;Pessoas;Observacoes\r\n";
+  function abrirNoGoogleSheets(linhas) {
+    let tsv = "Data\tHora\tNome\tTelefone\tPessoas\tObservacoes\n";
     linhas.forEach(function (r) {
-      csv += [
+      tsv += [
         formatarData(r.data_reserva),
         r.horario.slice(0, 5),
         r.nome,
         r.telefone,
         r.num_pessoas,
-        r.observacoes || ""
-      ].map(function (c) {
-        return '"' + String(c).replace(/"/g, '""') + '"';
-      }).join(";") + "\r\n";
+        (r.observacoes || "").replace(/[\t\n]/g, " ")
+      ].join("\t") + "\n";
     });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "reservas-confirmadas.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    navigator.clipboard.writeText(tsv).then(function () {
+      window.open("https://sheets.new", "_blank");
+      alert("Dados copiados! Na planilha do Google que abriu, clique na c\u00E9lula A1 e cole com Cmd+V (Mac) ou Ctrl+V.");
+    }).catch(function () {
+      alert("N\u00E3o foi poss\u00EDvel copiar os dados automaticamente. Tente de novo.");
+    });
   }
 
   // ===== CLIENTES (HISTÓRICO) =====
@@ -569,20 +616,63 @@
     vazio.style.display = clientes.length === 0 ? "block" : "none";
     if (clientes.length === 0) { lista.innerHTML = ""; return; }
 
+    const medalhas = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
     let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
-      '<th>Cliente</th><th>Telefone</th><th>Reservas</th><th>Confirmadas</th><th>Última reserva</th>' +
+      '<th>#</th><th>Cliente</th><th>Telefone</th><th>Reservas</th><th>Confirmadas</th><th>Última reserva</th>' +
       '</tr></thead><tbody>';
-    clientes.forEach(function (c) {
-      html += '<tr>' +
-        '<td>' + (c.total > 1 ? E_ESTRELA + " " : "") + escapar(c.nome) + '</td>' +
+    clientes.forEach(function (c, i) {
+      const posicao = i < 3 ? medalhas[i] : (i + 1) + "\u00BA";
+      const tel = (c.telefone || "").replace(/\D/g, "");
+      html += '<tr class="linha-cliente" data-tel="' + tel + '" title="Clique para ver o histórico">' +
+        '<td>' + posicao + '</td>' +
+        '<td class="nome-link">' + escapar(c.nome) + '</td>' +
         '<td>' + escapar(c.telefone) + '</td>' +
         '<td>' + c.total + '</td>' +
         '<td>' + c.confirmadas + '</td>' +
         '<td>' + formatarData(c.ultima) + '</td>' +
       '</tr>';
     });
+    html += '</tbody></table></div>' +
+      '<p style="color:var(--cinza);font-size:.88rem;margin-top:10px">Clique em um cliente para ver o histórico completo de reservas.</p>';
+    lista.innerHTML = html;
+
+    lista.querySelectorAll(".linha-cliente").forEach(function (tr) {
+      tr.addEventListener("click", function () {
+        desenharHistorico(tr.dataset.tel);
+      });
+    });
+  }
+
+  // ===== HISTÓRICO DE UM CLIENTE =====
+  function desenharHistorico(tel) {
+    const doCliente = reservas.filter(function (r) { return telDe(r) === tel; })
+      .slice().sort(function (a, b) {
+        return (b.data_reserva + b.horario).localeCompare(a.data_reserva + a.horario);
+      });
+    if (doCliente.length === 0) { desenharClientes(); return; }
+
+    const nome = doCliente[doCliente.length - 1].nome;
+    const confirmadas = doCliente.filter(function (r) { return r.status === "confirmada"; }).length;
+    contador.textContent = "Histórico de " + nome + " \u2014 " + doCliente.length +
+      (doCliente.length === 1 ? " reserva (" : " reservas (") + confirmadas + " confirmada(s))";
+    vazio.style.display = "none";
+
+    let html = '<button class="filtro" id="btn-voltar" style="margin-bottom:16px">\u2190 Voltar para clientes</button>' +
+      '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
+      '<th>Data</th><th>Hora</th><th>Pessoas</th><th>Status</th><th>Observações</th>' +
+      '</tr></thead><tbody>';
+    doCliente.forEach(function (r) {
+      html += '<tr>' +
+        '<td>' + formatarData(r.data_reserva) + '</td>' +
+        '<td>' + r.horario.slice(0, 5) + '</td>' +
+        '<td>' + r.num_pessoas + '</td>' +
+        '<td><span class="badge ' + r.status + '">' + r.status + '</span></td>' +
+        '<td>' + escapar(r.observacoes || "") + '</td>' +
+      '</tr>';
+    });
     html += '</tbody></table></div>';
     lista.innerHTML = html;
+    document.getElementById("btn-voltar").addEventListener("click", desenharClientes);
   }
 
   function escapar(texto) {

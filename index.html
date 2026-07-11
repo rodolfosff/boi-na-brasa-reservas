@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Boi na Brasa — Reservas | Churrascaria e Pizzaria em Surubim</title>
+<title>Boi na Brasa &#x2014; Reservas | Churrascaria e Pizzaria em Surubim</title>
 <meta name="description" content="Reserve sua mesa na Churrascaria Boi na Brasa. Tradição e qualidade desde 1985 em Surubim-PE. Churrasco, pizzas e música ao vivo nos fins de semana.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -274,7 +274,7 @@
   <div class="container">
     <div class="faixa-item">
       <span class="rotulo">Endereço</span>
-      <span class="valor">Av. Sen. Paulo Pessoa Guerra, 112 — Surubim, PE</span>
+      <span class="valor">Av. Sen. Paulo Pessoa Guerra, 112 &#x2014; Surubim, PE</span>
     </div>
     <div class="faixa-item">
       <span class="rotulo">Casa completa</span>
@@ -282,7 +282,7 @@
     </div>
     <div class="faixa-item">
       <span class="rotulo">Fim de semana</span>
-      <span class="valor">Música ao vivo 🎶</span>
+      <span class="valor">Música ao vivo &#x1F3B6;</span>
     </div>
   </div>
 </section>
@@ -327,7 +327,6 @@
             <option value="20:30">20:30</option>
             <option value="21:00">21:00</option>
             <option value="21:30">21:30</option>
-            <option value="22:00">22:00</option>
           </select>
         </div>
       </div>
@@ -357,7 +356,7 @@
         <textarea id="obs" name="obs" placeholder="Aniversário, mesa perto do palco, cadeira de bebê..."></textarea>
       </div>
 
-      <button type="submit" class="btn-enviar" id="btn-enviar">Confirmar reserva 🔥</button>
+      <button type="submit" class="btn-enviar" id="btn-enviar">Confirmar reserva &#x1F525;</button>
 
       <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
       <p class="nota-confirmacao">Sua reserva fica <strong>pendente</strong> até a confirmação da nossa equipe.</p>
@@ -368,7 +367,7 @@
 <footer>
   <div class="container">
     <a class="marca" href="#">BOI NA <span>BRASA</span></a>
-    <p>Av. Senador Paulo Pessoa Guerra, 112 — Santo Antônio, Surubim - PE</p>
+    <p>Av. Senador Paulo Pessoa Guerra, 112 &#x2014; Santo Antônio, Surubim - PE</p>
     <p>Siga a gente: <a href="https://www.instagram.com/boinabrasasurubim/" target="_blank" rel="noopener">@boinabrasasurubim</a></p>
   </div>
 </footer>
@@ -377,6 +376,9 @@
   // ===== CONFIGURAÇÃO DO SUPABASE =====
   const SUPABASE_URL = "https://hysnhjzngbrrjrqczmxi.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5c25oanpuZ2JycmpycWN6bXhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NTc2MTksImV4cCI6MjA5OTEzMzYxOX0.vBDuJmogatj2HyetGhSmu3z1q5S7S_OPCDNF49vZAQo";
+
+  // Emoji em código unicode para nunca corromper
+  const E_FOGO = "\uD83D\uDD25";
 
   // Impede reserva para datas passadas
   const campoData = document.getElementById("data");
@@ -439,14 +441,14 @@
       }
 
       aviso.className = "aviso ok";
-      aviso.textContent = "🔥 Reserva enviada, " + nome.split(" ")[0] + "! Em breve nossa equipe confirma pelo WhatsApp.";
+      aviso.textContent = E_FOGO + " Reserva enviada, " + nome.split(" ")[0] + "! Em breve nossa equipe confirma pelo WhatsApp.";
       form.reset();
     } catch (erro) {
       aviso.className = "aviso erro";
       aviso.textContent = "Não foi possível enviar sua reserva agora. Tente de novo em instantes ou chame a gente no Instagram.";
     } finally {
       botao.disabled = false;
-      botao.textContent = "Confirmar reserva 🔥";
+      botao.textContent = "Confirmar reserva " + E_FOGO;
     }
   });
 </script>
