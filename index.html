@@ -44,7 +44,9 @@
     color:var(--amarelo);
     text-decoration:none;
     letter-spacing:.5px;
+    display:flex;align-items:center;gap:11px;
   }
+  .logo-nav{height:42px;width:auto}
   .marca span{color:var(--branco)}
   .nav a.cta-mini{
     font-family:'Barlow Condensed',sans-serif;
@@ -69,6 +71,59 @@
       radial-gradient(ellipse 55% 38% at 50% 104%, rgba(247,179,43,.20), transparent 60%),
       var(--preto);
   }
+  .logo-hero{
+    height:clamp(130px,22vw,200px);width:auto;
+    margin-bottom:20px;
+    filter:drop-shadow(0 0 22px rgba(232,100,27,.42));
+    animation:logoBrilho 3.2s ease-in-out infinite, entrar .9s ease-out both;
+  }
+  @keyframes logoBrilho{
+    0%,100%{filter:drop-shadow(0 0 16px rgba(232,100,27,.32))}
+    50%{filter:drop-shadow(0 0 34px rgba(247,179,43,.6))}
+  }
+  @keyframes entrar{
+    from{opacity:0;transform:translateY(18px)}
+    to{opacity:1;transform:none}
+  }
+  .hero .selo{animation:entrar .8s .15s ease-out both}
+  .hero h1{animation:entrar .8s .3s ease-out both}
+  .hero p{animation:entrar .8s .45s ease-out both}
+  .hero .btn-hero{animation:entrar .8s .6s ease-out both}
+
+  /* brasas subindo */
+  .brasas{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .brasas i{
+    position:absolute;bottom:-10px;
+    width:6px;height:6px;border-radius:50%;
+    background:radial-gradient(circle,var(--amarelo),var(--laranja) 65%,transparent);
+    opacity:0;
+    animation:subir linear infinite;
+  }
+  @keyframes subir{
+    0%{transform:translateY(0) scale(1);opacity:0}
+    10%{opacity:.85}
+    100%{transform:translateY(-560px) translateX(36px) scale(.2);opacity:0}
+  }
+  .brasas i:nth-child(1){left:12%;animation-duration:6.5s;animation-delay:0s}
+  .brasas i:nth-child(2){left:24%;animation-duration:8s;animation-delay:1.4s;width:4px;height:4px}
+  .brasas i:nth-child(3){left:37%;animation-duration:7s;animation-delay:.6s}
+  .brasas i:nth-child(4){left:48%;animation-duration:9s;animation-delay:2.2s;width:5px;height:5px}
+  .brasas i:nth-child(5){left:58%;animation-duration:6s;animation-delay:1s}
+  .brasas i:nth-child(6){left:67%;animation-duration:8.5s;animation-delay:.2s;width:4px;height:4px}
+  .brasas i:nth-child(7){left:78%;animation-duration:7.5s;animation-delay:1.8s}
+  .brasas i:nth-child(8){left:88%;animation-duration:6.8s;animation-delay:.9s;width:5px;height:5px}
+  .brasas i:nth-child(9){left:30%;animation-duration:9.5s;animation-delay:3s;width:4px;height:4px}
+
+  /* aparecer ao rolar */
+  .revela{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+  .revela.visivel{opacity:1;transform:none}
+
+  @media (prefers-reduced-motion: reduce){
+    .logo-hero,.hero .selo,.hero h1,.hero p,.hero .btn-hero{animation:none}
+    .brasas{display:none}
+    .revela{opacity:1;transform:none;transition:none}
+  }
+
   .selo{
     display:inline-block;
     font-family:'Barlow Condensed',sans-serif;
@@ -246,7 +301,8 @@
     padding:34px 0;
     text-align:center;
   }
-  footer .marca{font-size:1rem}
+  footer .marca{font-size:1rem;justify-content:center}
+  .logo-footer{display:block;height:84px;width:auto;margin:0 auto 10px;opacity:.92}
   footer p{color:var(--cinza);font-size:.9rem;margin-top:8px}
   footer a{color:var(--amarelo);text-decoration:none}
   footer a:hover{text-decoration:underline}
@@ -256,13 +312,16 @@
 
 <header>
   <div class="container nav">
-    <a class="marca" href="#">BOI NA <span>BRASA</span></a>
+    <a class="marca" href="#"><img src="logo.png" alt="" class="logo-nav">BOI NA <span>BRASA</span></a>
     <a class="cta-mini" href="#reservar">Reservar mesa</a>
   </div>
 </header>
 
 <section class="hero">
+  <div class="brasas" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="container">
+    <img src="logo.png" alt="Churrascaria Boi na Brasa &#x2014; desde 1985" class="logo-hero">
+    <br>
     <span class="selo">Tradição e qualidade desde 1985</span>
     <h1>Sua mesa na melhor<br><span class="fogo">brasa</span> de Surubim</h1>
     <p>Churrasco no ponto, pizzas de dar água na boca e música ao vivo nos fins de semana. Garanta seu lugar antes de chegar.</p>
@@ -272,15 +331,15 @@
 
 <section class="faixa">
   <div class="container">
-    <div class="faixa-item">
+    <div class="faixa-item revela">
       <span class="rotulo">Endereço</span>
       <span class="valor">Av. Sen. Paulo Pessoa Guerra, 112 &#x2014; Surubim, PE</span>
     </div>
-    <div class="faixa-item">
+    <div class="faixa-item revela">
       <span class="rotulo">Casa completa</span>
       <span class="valor">Churrascaria &amp; Pizzaria</span>
     </div>
-    <div class="faixa-item">
+    <div class="faixa-item revela">
       <span class="rotulo">Fim de semana</span>
       <span class="valor">Música ao vivo &#x1F3B6;</span>
     </div>
@@ -289,10 +348,10 @@
 
 <section class="secao-reserva" id="reservar">
   <div class="container">
-    <h2 class="titulo-secao">Reserve sua mesa</h2>
-    <p class="sub-secao">Preencha os dados abaixo e aguarde a confirmação da nossa equipe pelo WhatsApp.</p>
+    <h2 class="titulo-secao revela">Reserve sua mesa</h2>
+    <p class="sub-secao revela">Preencha os dados abaixo e aguarde a confirmação da nossa equipe pelo WhatsApp.</p>
 
-    <form id="form-reserva" novalidate>
+    <form id="form-reserva" class="revela" novalidate>
       <div class="campo">
         <label for="nome">Nome completo</label>
         <input type="text" id="nome" name="nome" placeholder="Seu nome" required autocomplete="name">
@@ -366,7 +425,7 @@
 
 <footer>
   <div class="container">
-    <a class="marca" href="#">BOI NA <span>BRASA</span></a>
+    <img src="logo.png" alt="" class="logo-footer">
     <p>Av. Senador Paulo Pessoa Guerra, 112 &#x2014; Santo Antônio, Surubim - PE</p>
     <p>Siga a gente: <a href="https://www.instagram.com/boinabrasasurubim/" target="_blank" rel="noopener">@boinabrasasurubim</a></p>
   </div>
@@ -451,6 +510,23 @@
       botao.textContent = "Confirmar reserva " + E_FOGO;
     }
   });
+
+  // ===== ANIMAÇÃO AO ROLAR A PÁGINA =====
+  const podeAnimar = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const alvos = document.querySelectorAll(".revela");
+  if (podeAnimar && "IntersectionObserver" in window) {
+    const observador = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("visivel");
+          observador.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    alvos.forEach(function (el) { observador.observe(el); });
+  } else {
+    alvos.forEach(function (el) { el.classList.add("visivel"); });
+  }
 </script>
 
 </body>

@@ -36,9 +36,30 @@
     padding:16px 0;
   }
   header .container{display:flex;align-items:center;justify-content:space-between}
+  .marca-wrap{display:flex;align-items:center;gap:12px}
+  .logo-nav{height:44px;width:auto}
   .marca{
     font-family:'Alfa Slab One',serif;
     font-size:1.05rem;color:var(--amarelo);
+  }
+  .logo-login{
+    display:block;height:112px;width:auto;
+    margin:0 auto 16px;
+    filter:drop-shadow(0 0 18px rgba(232,100,27,.4));
+    animation:logoPulso 3.2s ease-in-out infinite;
+  }
+  @keyframes logoPulso{
+    0%,100%{filter:drop-shadow(0 0 14px rgba(232,100,27,.3))}
+    50%{filter:drop-shadow(0 0 28px rgba(247,179,43,.55))}
+  }
+  @keyframes entrar{
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:none}
+  }
+  .cartao{animation:entrar .35s ease-out both}
+  @media (prefers-reduced-motion: reduce){
+    .logo-login{animation:none}
+    .cartao{animation:none}
   }
   .marca span{color:var(--branco)}
   .marca small{
@@ -235,7 +256,7 @@
 
 <header>
   <div class="container">
-    <div class="marca">BOI NA <span>BRASA</span><small>Painel de reservas</small></div>
+    <div class="marca-wrap"><img src="logo.png" alt="" class="logo-nav"><div class="marca">BOI NA <span>BRASA</span><small>Painel de reservas</small></div></div>
     <button id="btn-sair">Sair</button>
   </div>
 </header>
@@ -244,6 +265,7 @@
 <section id="tela-login">
   <div class="container">
     <div class="card-login">
+      <img src="logo.png" alt="Boi na Brasa" class="logo-login">
       <h1>&Aacute;rea da equipe &#x1F510;</h1>
       <p>Entre com seu e-mail e senha cadastrados no Supabase.</p>
       <form id="form-login">
