@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Reservas &mdash; Boi na Brasa</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --preto:#0E0B08;
+    --carvao:#1A1511;
+    --fumaca:#2A231C;
+    --branco:#FFF8EE;
+    --cinza:#B8AC9C;
+    --amarelo:#F7B32B;
+    --laranja:#E8641B;
+    --brasa:#C93A0F;
+    --verde:#4CAF6E;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--preto);
+    color:var(--branco);
+    font-family:'Barlow',sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .container{max-width:960px;margin:0 auto;padding:0 20px}
+
+  header{
+    background:var(--carvao);
+    border-bottom:1px solid rgba(247,179,43,.2);
+    padding:16px 0;
+  }
+  header .container{display:flex;align-items:center;justify-content:space-between}
+  .marca-wrap{display:flex;align-items:center;gap:12px}
+  .logo-nav{height:44px;width:auto}
+  .marca{
+    font-family:'Alfa Slab One',serif;
+    font-size:1.05rem;color:var(--amarelo);
+  }
+  .logo-login{
+    display:block;height:112px;width:auto;
+    margin:0 auto 16px;
+    filter:drop-shadow(0 0 18px rgba(232,100,27,.4));
+    animation:logoPulso 3.2s ease-in-out infinite;
+  }
+  @keyframes logoPulso{
+    0%,100%{filter:drop-shadow(0 0 14px rgba(232,100,27,.3))}
+    50%{filter:drop-shadow(0 0 28px rgba(247,179,43,.55))}
+  }
+  @keyframes entrar{
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:none}
+  }
+  .cartao{animation:entrar .35s ease-out both}
+  @media (prefers-reduced-motion: reduce){
+    .logo-login{animation:none}
+    .cartao{animation:none}
+  }
+  .marca span{color:var(--branco)}
+  .marca small{
+    display:block;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:.8rem;font-weight:600;
+    letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--cinza);
+  }
+  #btn-sair{
+    display:none;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.95rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    background:transparent;color:var(--cinza);
+    border:1px solid rgba(184,172,156,.4);
+    border-radius:5px;padding:8px 16px;cursor:pointer;
+  }
+  #btn-sair:hover{color:var(--branco);border-color:var(--branco)}
+
+  /* ---------- LOGIN ---------- */
+  #tela-login{padding:70px 0}
+  .card-login{
+    max-width:400px;margin:0 auto;
+    background:var(--carvao);
+    border:1px solid rgba(247,179,43,.22);
+    border-radius:12px;
+    padding:36px 30px;
+  }
+  .card-login h1{
+    font-family:'Alfa Slab One',serif;
+    font-weight:400;font-size:1.5rem;
+    text-align:center;margin-bottom:6px;
+  }
+  .card-login p{text-align:center;color:var(--cinza);font-size:.95rem;margin-bottom:26px}
+  label{
+    display:block;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.9rem;
+    text-transform:uppercase;letter-spacing:1.8px;
+    color:var(--amarelo);margin-bottom:6px;
+  }
+  input{
+    width:100%;
+    background:var(--fumaca);
+    border:1px solid rgba(255,248,238,.14);
+    border-radius:6px;
+    color:var(--branco);
+    font-size:1rem;
+    padding:12px 13px;
+    margin-bottom:18px;
+  }
+  input:focus{border-color:var(--laranja);outline:none}
+  .btn{
+    width:100%;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:1.1rem;
+    text-transform:uppercase;letter-spacing:2px;
+    color:var(--preto);
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    border:none;border-radius:6px;
+    padding:13px;cursor:pointer;
+  }
+  .btn:disabled{opacity:.55;cursor:wait}
+  .erro-login{
+    display:none;
+    margin-top:14px;padding:12px;
+    border-radius:6px;text-align:center;font-size:.92rem;
+    background:rgba(201,58,15,.14);
+    border:1px solid rgba(201,58,15,.6);
+    color:#FF8A5C;
+  }
+
+  /* ---------- PAINEL ---------- */
+  #tela-painel{display:none;padding:34px 0 60px}
+  .filtros{
+    display:flex;gap:8px;flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .filtro{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.95rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    background:var(--carvao);color:var(--cinza);
+    border:1px solid rgba(184,172,156,.25);
+    border-radius:100px;
+    padding:8px 18px;cursor:pointer;
+  }
+  .filtro.ativo{
+    background:var(--amarelo);color:var(--preto);
+    border-color:var(--amarelo);
+  }
+  #contador{color:var(--cinza);font-size:.92rem;margin-bottom:16px}
+  .cartao{
+    background:var(--carvao);
+    border:1px solid rgba(255,248,238,.1);
+    border-left:4px solid var(--cinza);
+    border-radius:10px;
+    padding:18px 20px;
+    margin-bottom:14px;
+    display:flex;flex-wrap:wrap;
+    justify-content:space-between;
+    gap:14px;align-items:center;
+  }
+  .cartao.pendente{border-left-color:var(--amarelo)}
+  .cartao.confirmada{border-left-color:var(--verde)}
+  .cartao.cancelada{border-left-color:var(--brasa);opacity:.65}
+  .info-reserva{flex:1;min-width:220px}
+  .nome-cliente{font-weight:700;font-size:1.1rem}
+  .detalhes{color:var(--cinza);font-size:.95rem;margin-top:2px}
+  .detalhes strong{color:var(--branco);font-weight:600}
+  .obs{
+    margin-top:6px;font-size:.9rem;color:var(--cinza);
+    font-style:italic;
+  }
+  .fiel{
+    margin-top:5px;font-size:.85rem;font-weight:600;
+    color:var(--amarelo);
+  }
+  .badge{
+    display:inline-block;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.8rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    border-radius:100px;padding:4px 12px;
+    margin-bottom:6px;
+  }
+  .badge.pendente{background:rgba(247,179,43,.15);color:var(--amarelo)}
+  .badge.confirmada{background:rgba(76,175,110,.15);color:var(--verde)}
+  .badge.cancelada{background:rgba(201,58,15,.18);color:#FF8A5C}
+  .acoes{display:flex;gap:8px}
+  .acoes button{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.92rem;
+    text-transform:uppercase;letter-spacing:1.2px;
+    border-radius:6px;padding:9px 16px;cursor:pointer;
+    border:1px solid transparent;
+  }
+  .b-confirmar{background:var(--verde);color:var(--preto);border:none}
+  .b-cancelar{background:transparent;color:#FF8A5C;border-color:rgba(201,58,15,.6)}
+  .b-whats{background:transparent;color:var(--amarelo);border-color:rgba(247,179,43,.5);text-decoration:none;display:inline-block}
+  .acoes button:hover,.b-whats:hover{filter:brightness(1.15)}
+
+  /* ---------- TABELAS (PLANILHA / CLIENTES) ---------- */
+  .tabela-wrap{
+    overflow-x:auto;
+    border:1px solid rgba(255,248,238,.1);
+    border-radius:10px;
+    background:var(--carvao);
+  }
+  table.tabela{width:100%;border-collapse:collapse;min-width:640px}
+  .tabela th{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:.85rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--amarelo);text-align:left;
+    padding:12px 14px;
+    background:var(--fumaca);
+    border-bottom:1px solid rgba(247,179,43,.25);
+    white-space:nowrap;
+  }
+  .tabela td{
+    padding:11px 14px;font-size:.95rem;
+    border-bottom:1px solid rgba(255,248,238,.07);
+  }
+  .tabela tr:last-child td{border-bottom:none}
+  .btn-csv{
+    margin-top:14px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:1rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--preto);
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    border:none;border-radius:6px;
+    padding:11px 20px;cursor:pointer;
+  }
+  .btn-csv:hover{filter:brightness(1.1)}
+  .linha-cliente{cursor:pointer}
+  .linha-cliente:hover td{background:rgba(247,179,43,.07)}
+  .nome-link{color:var(--amarelo);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+  #vazio{
+    display:none;text-align:center;color:var(--cinza);
+    padding:50px 20px;
+  }
+  #carregando{text-align:center;color:var(--cinza);padding:40px}
+  @media (max-width:600px){
+    .cartao{flex-direction:column;align-items:flex-start}
+    .acoes{width:100%;flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="marca-wrap"><img src="logo.png" alt="" class="logo-nav"><div class="marca">BOI NA <span>BRASA</span><small>Painel de reservas</small></div></div>
+    <button id="btn-sair">Sair</button>
+  </div>
+</header>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<section id="tela-login">
+  <div class="container">
+    <div class="card-login">
+      <img src="logo.png" alt="Boi na Brasa" class="logo-login">
+      <h1>&Aacute;rea da equipe &#x1F510;</h1>
+      <p>Entre com seu e-mail e senha cadastrados no Supabase.</p>
+      <form id="form-login">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" required autocomplete="username">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" required autocomplete="current-password">
+        <button type="submit" class="btn" id="btn-login">Entrar</button>
+        <div class="erro-login" id="erro-login"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PAINEL ===== -->
+<section id="tela-painel">
+  <div class="container">
+    <div class="filtros">
+      <button class="filtro ativo" data-filtro="hoje">Hoje</button>
+      <button class="filtro" data-filtro="pendente">Pendentes</button>
+      <button class="filtro" data-filtro="confirmada">Confirmadas</button>
+      <button class="filtro" data-filtro="todas">Todas</button>
+      <button class="filtro" data-filtro="planilha">Planilha</button>
+      <button class="filtro" data-filtro="clientes">Clientes</button>
+    </div>
+    <div id="contador"></div>
+    <div id="carregando">Carregando reservas...</div>
+    <div id="lista"></div>
+    <div id="vazio">Nenhuma reserva por aqui ainda. &#x1F37D;&#xFE0F;</div>
+  </div>
+</section>
+
+<script>
+  // ===== CONFIGURAÇÃO =====
+  const SUPABASE_URL = "https://hysnhjzngbrrjrqczmxi.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5c25oanpuZ2JycmpycWN6bXhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NTc2MTksImV4cCI6MjA5OTEzMzYxOX0.vBDuJmogatj2HyetGhSmu3z1q5S7S_OPCDNF49vZAQo";
+
+  // Emojis escritos em código unicode para nunca corromperem
+  const E_FOGO = "\uD83D\uDD25";      // fogo
+  const E_CHECK = "\u2705";           // confirmado
+  const E_DATA = "\uD83D\uDCC5";      // calendário
+  const E_HORA = "\uD83D\uDD57";      // relógio
+  const E_PESSOAS = "\uD83D\uDC65";   // pessoas
+  const E_CARNE = "\uD83C\uDF56";     // carne
+  const E_ESTRELA = "\u2B50";         // estrela
+
+  let tokenAcesso = null;
+  let filtroAtual = "hoje";
+  let reservas = [];
+
+  const telaLogin = document.getElementById("tela-login");
+  const telaPainel = document.getElementById("tela-painel");
+  const btnSair = document.getElementById("btn-sair");
+  const lista = document.getElementById("lista");
+  const vazio = document.getElementById("vazio");
+  const carregando = document.getElementById("carregando");
+  const contador = document.getElementById("contador");
+
+  // ===== SESSÃO SALVA (login vale por 1 hora) =====
+  const SESSAO_DURACAO_MS = 60 * 60 * 1000; // 1 hora
+
+  function salvarSessao(token) {
+    try {
+      localStorage.setItem("bnb_token", token);
+      localStorage.setItem("bnb_expira", String(Date.now() + SESSAO_DURACAO_MS));
+    } catch (e) {}
+  }
+  function limparSessao() {
+    try {
+      localStorage.removeItem("bnb_token");
+      localStorage.removeItem("bnb_expira");
+    } catch (e) {}
+  }
+  function sessaoSalva() {
+    try {
+      const t = localStorage.getItem("bnb_token");
+      const exp = parseInt(localStorage.getItem("bnb_expira") || "0", 10);
+      if (t && Date.now() < exp) return t;
+    } catch (e) {}
+    return null;
+  }
+  function entrarNoPainel() {
+    telaLogin.style.display = "none";
+    telaPainel.style.display = "block";
+    btnSair.style.display = "inline-block";
+    carregarReservas();
+  }
+  function voltarAoLogin() {
+    limparSessao();
+    tokenAcesso = null;
+    telaPainel.style.display = "none";
+    btnSair.style.display = "none";
+    telaLogin.style.display = "block";
+  }
+
+  // ===== LOGIN =====
+  document.getElementById("form-login").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById("btn-login");
+    const erro = document.getElementById("erro-login");
+    erro.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Entrando...";
+
+    try {
+      const resp = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("senha").value
+        })
+      });
+      const dados = await resp.json();
+      if (!resp.ok || !dados.access_token) {
+        throw new Error(dados.error_description || "Login inválido");
+      }
+      tokenAcesso = dados.access_token;
+      salvarSessao(tokenAcesso);
+      entrarNoPainel();
+    } catch (err) {
+      erro.textContent = "E-mail ou senha incorretos. Tente de novo.";
+      erro.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+    }
+  });
+
+  // ===== SAIR =====
+  btnSair.addEventListener("click", function () {
+    voltarAoLogin();
+    document.getElementById("senha").value = "";
+  });
+
+  // Se já logou há menos de 1 hora, entra direto sem pedir senha
+  const tokenGuardado = sessaoSalva();
+  if (tokenGuardado) {
+    tokenAcesso = tokenGuardado;
+    entrarNoPainel();
+  }
+
+  // ===== CARREGAR RESERVAS =====
+  async function carregarReservas() {
+    carregando.style.display = "block";
+    lista.innerHTML = "";
+    vazio.style.display = "none";
+    try {
+      const resp = await fetch(
+        SUPABASE_URL + "/rest/v1/reservas?select=*&order=data_reserva.asc,horario.asc",
+        {
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + tokenAcesso
+          }
+        }
+      );
+      if (resp.status === 401) { voltarAoLogin(); return; }
+      if (!resp.ok) throw new Error("Erro " + resp.status);
+      reservas = await resp.json();
+      desenharLista();
+    } catch (err) {
+      lista.innerHTML = "<p style='color:#FF8A5C'>Erro ao carregar reservas. Atualize a página e faça login de novo.</p>";
+    } finally {
+      carregando.style.display = "none";
+    }
+  }
+
+  // ===== FILTROS =====
+  document.querySelectorAll(".filtro").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".filtro").forEach(function (x) { x.classList.remove("ativo"); });
+      b.classList.add("ativo");
+      filtroAtual = b.dataset.filtro;
+      desenharLista();
+    });
+  });
+
+  function dataHojeISO() {
+    const h = new Date();
+    h.setMinutes(h.getMinutes() - h.getTimezoneOffset());
+    return h.toISOString().split("T")[0];
+  }
+
+  function formatarData(iso) {
+    const partes = iso.split("-");
+    return partes[2] + "/" + partes[1] + "/" + partes[0];
+  }
+
+  function telDe(r) {
+    return (r.telefone || "").replace(/\D/g, "");
+  }
+
+  // Quantas reservas esse telefone já fez (histórico do cliente)
+  function historicoCliente(tel) {
+    return reservas.filter(function (x) { return telDe(x) === tel; }).length;
+  }
+
+  // Monta o link do WhatsApp do jeito certo para cada aparelho:
+  // - celular: wa.me (abre o app do celular, emojis funcionam)
+  // - computador: WhatsApp Web (o app de computador tem um bug que quebra emojis)
+  function linkZap(telLimpo, mensagem) {
+    const ehCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (ehCelular) {
+      return "https://wa.me/55" + telLimpo + "?text=" + encodeURIComponent(mensagem);
+    }
+    return "https://web.whatsapp.com/send?phone=55" + telLimpo + "&text=" + encodeURIComponent(mensagem);
+  }
+
+  // ===== LINK DE CONFIRMAÇÃO NO WHATSAPP =====
+  function linkConfirmacao(r) {
+    const telLimpo = telDe(r);
+    const hor = r.horario.slice(0, 5);
+    let mensagem =
+      "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + "\n\n" +
+      "Sua reserva está CONFIRMADA " + E_CHECK + "\n\n" +
+      E_DATA + " Data: " + formatarData(r.data_reserva) + "\n" +
+      E_HORA + " Horário: " + hor + "\n" +
+      E_PESSOAS + " Pessoas: " + r.num_pessoas;
+
+    // Reservas entre 20h e 21h30: aviso de tolerância de 30 minutos
+    if (hor >= "20:00" && hor <= "21:30") {
+      mensagem += "\n\n\u23F0 Importante: seguramos sua mesa por até 30 minutos após o horário marcado. Passado esse prazo, a reserva poderá ser liberada para outros clientes.";
+    }
+
+    mensagem +=
+      "\n\nTe esperamos! " + E_CARNE + "\n" +
+      "Av. Senador Paulo Pessoa Guerra, 112 \u2013 Surubim/PE";
+    return linkZap(telLimpo, mensagem);
+  }
+
+  // ===== DESENHAR (decide qual visão mostrar) =====
+  function desenharLista() {
+    if (filtroAtual === "planilha") { desenharPlanilha(); return; }
+    if (filtroAtual === "clientes") { desenharClientes(); return; }
+
+    const hoje = dataHojeISO();
+    let filtradas = reservas;
+    if (filtroAtual === "hoje") {
+      filtradas = reservas.filter(function (r) { return r.data_reserva === hoje && r.status !== "cancelada"; });
+    } else if (filtroAtual === "pendente" || filtroAtual === "confirmada") {
+      filtradas = reservas.filter(function (r) { return r.status === filtroAtual; });
+    }
+
+    contador.textContent = filtradas.length + (filtradas.length === 1 ? " reserva" : " reservas");
+    lista.innerHTML = "";
+    vazio.style.display = filtradas.length === 0 ? "block" : "none";
+
+    filtradas.forEach(function (r) {
+      const div = document.createElement("div");
+      div.className = "cartao " + r.status;
+
+      const telLimpo = telDe(r);
+      const vezes = historicoCliente(telLimpo);
+      const linkWhats = linkZap(telLimpo,
+        "Olá, " + r.nome.split(" ")[0] + "! Aqui é da Churrascaria Boi na Brasa " + E_FOGO + " Sobre sua reserva de " +
+        formatarData(r.data_reserva) + " às " + r.horario.slice(0,5) + " para " + r.num_pessoas + " pessoa(s):"
+      );
+
+      let botoes = "";
+      if (r.status === "pendente") {
+        botoes = '<button class="b-confirmar" data-id="' + r.id + '" data-acao="confirmada">\u2713 Confirmar</button>' +
+                 '<button class="b-cancelar" data-id="' + r.id + '" data-acao="cancelada">\u2715 Cancelar</button>';
+      } else if (r.status === "confirmada") {
+        botoes = '<button class="b-cancelar" data-id="' + r.id + '" data-acao="cancelada">\u2715 Cancelar</button>';
+      } else {
+        botoes = '<button class="b-confirmar" data-id="' + r.id + '" data-acao="pendente">\u21A9 Reativar</button>';
+      }
+
+      div.innerHTML =
+        '<div class="info-reserva">' +
+          '<span class="badge ' + r.status + '">' + r.status + '</span>' +
+          '<div class="nome-cliente">' + escapar(r.nome) + '</div>' +
+          '<div class="detalhes"><strong>' + formatarData(r.data_reserva) + '</strong> às <strong>' + r.horario.slice(0,5) + '</strong> · ' + r.num_pessoas + ' pessoa(s) · ' + escapar(r.telefone) + '</div>' +
+          (r.observacoes ? '<div class="obs">\u201C' + escapar(r.observacoes) + '\u201D</div>' : '') +
+          (vezes > 1 ? '<div class="fiel">' + E_ESTRELA + ' Cliente com ' + vezes + ' reservas conosco</div>' : '') +
+        '</div>' +
+        '<div class="acoes">' +
+          '<a class="b-whats" href="' + linkWhats + '" target="_blank" rel="noopener">WhatsApp</a>' +
+          botoes +
+        '</div>';
+
+      lista.appendChild(div);
+    });
+
+    lista.querySelectorAll("button[data-acao]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        // Abre a janela AGORA (durante o clique) para o navegador não bloquear o pop-up.
+        // O endereço do WhatsApp só é colocado nela depois que o banco confirmar.
+        let janelaWhats = null;
+        if (b.dataset.acao === "confirmada") {
+          janelaWhats = window.open("about:blank", "_blank");
+        }
+        mudarStatus(b.dataset.id, b.dataset.acao, b, janelaWhats);
+      });
+    });
+  }
+
+  // ===== PLANILHA DE CONFIRMADAS =====
+  function desenharPlanilha() {
+    const confirmadas = reservas.filter(function (r) { return r.status === "confirmada"; });
+    contador.textContent = confirmadas.length + (confirmadas.length === 1 ? " reserva confirmada" : " reservas confirmadas");
+    vazio.style.display = confirmadas.length === 0 ? "block" : "none";
+    if (confirmadas.length === 0) { lista.innerHTML = ""; return; }
+
+    let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
+      '<th>Data</th><th>Hora</th><th>Nome</th><th>Telefone</th><th>Pessoas</th><th>Observações</th>' +
+      '</tr></thead><tbody>';
+    confirmadas.forEach(function (r) {
+      html += '<tr>' +
+        '<td>' + formatarData(r.data_reserva) + '</td>' +
+        '<td>' + r.horario.slice(0, 5) + '</td>' +
+        '<td>' + escapar(r.nome) + '</td>' +
+        '<td>' + escapar(r.telefone) + '</td>' +
+        '<td>' + r.num_pessoas + '</td>' +
+        '<td>' + escapar(r.observacoes || "") + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div>' +
+      '<button class="btn-csv" id="btn-sheets">Abrir no Google Sheets</button>';
+
+    lista.innerHTML = html;
+    document.getElementById("btn-sheets").addEventListener("click", function () {
+      abrirNoGoogleSheets(confirmadas);
+    });
+  }
+
+  function abrirNoGoogleSheets(linhas) {
+    let tsv = "Data\tHora\tNome\tTelefone\tPessoas\tObservacoes\n";
+    linhas.forEach(function (r) {
+      tsv += [
+        formatarData(r.data_reserva),
+        r.horario.slice(0, 5),
+        r.nome,
+        r.telefone,
+        r.num_pessoas,
+        (r.observacoes || "").replace(/[\t\n]/g, " ")
+      ].join("\t") + "\n";
+    });
+    navigator.clipboard.writeText(tsv).then(function () {
+      window.open("https://sheets.new", "_blank");
+      alert("Dados copiados! Na planilha do Google que abriu, clique na c\u00E9lula A1 e cole com Cmd+V (Mac) ou Ctrl+V.");
+    }).catch(function () {
+      alert("N\u00E3o foi poss\u00EDvel copiar os dados automaticamente. Tente de novo.");
+    });
+  }
+
+  // ===== CLIENTES (HISTÓRICO) =====
+  function desenharClientes() {
+    const mapa = {};
+    reservas.forEach(function (r) {
+      const tel = telDe(r);
+      if (!tel) return;
+      if (!mapa[tel]) {
+        mapa[tel] = { nome: r.nome, telefone: r.telefone, total: 0, confirmadas: 0, ultima: r.data_reserva };
+      }
+      mapa[tel].total++;
+      if (r.status === "confirmada") mapa[tel].confirmadas++;
+      if (r.data_reserva > mapa[tel].ultima) mapa[tel].ultima = r.data_reserva;
+      mapa[tel].nome = r.nome; // mantém o nome mais recente
+    });
+
+    const clientes = Object.keys(mapa).map(function (k) { return mapa[k]; });
+    clientes.sort(function (a, b) { return b.total - a.total; });
+
+    contador.textContent = clientes.length + (clientes.length === 1 ? " cliente" : " clientes");
+    vazio.style.display = clientes.length === 0 ? "block" : "none";
+    if (clientes.length === 0) { lista.innerHTML = ""; return; }
+
+    const medalhas = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
+    let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
+      '<th>#</th><th>Cliente</th><th>Telefone</th><th>Reservas</th><th>Confirmadas</th><th>Última reserva</th>' +
+      '</tr></thead><tbody>';
+    clientes.forEach(function (c, i) {
+      const posicao = i < 3 ? medalhas[i] : (i + 1) + "\u00BA";
+      const tel = (c.telefone || "").replace(/\D/g, "");
+      html += '<tr class="linha-cliente" data-tel="' + tel + '" title="Clique para ver o histórico">' +
+        '<td>' + posicao + '</td>' +
+        '<td class="nome-link">' + escapar(c.nome) + '</td>' +
+        '<td>' + escapar(c.telefone) + '</td>' +
+        '<td>' + c.total + '</td>' +
+        '<td>' + c.confirmadas + '</td>' +
+        '<td>' + formatarData(c.ultima) + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div>' +
+      '<p style="color:var(--cinza);font-size:.88rem;margin-top:10px">Clique em um cliente para ver o histórico completo de reservas.</p>';
+    lista.innerHTML = html;
+
+    lista.querySelectorAll(".linha-cliente").forEach(function (tr) {
+      tr.addEventListener("click", function () {
+        desenharHistorico(tr.dataset.tel);
+      });
+    });
+  }
+
+  // ===== HISTÓRICO DE UM CLIENTE =====
+  function desenharHistorico(tel) {
+    const doCliente = reservas.filter(function (r) { return telDe(r) === tel; })
+      .slice().sort(function (a, b) {
+        return (b.data_reserva + b.horario).localeCompare(a.data_reserva + a.horario);
+      });
+    if (doCliente.length === 0) { desenharClientes(); return; }
+
+    const nome = doCliente[doCliente.length - 1].nome;
+    const confirmadas = doCliente.filter(function (r) { return r.status === "confirmada"; }).length;
+    contador.textContent = "Histórico de " + nome + " \u2014 " + doCliente.length +
+      (doCliente.length === 1 ? " reserva (" : " reservas (") + confirmadas + " confirmada(s))";
+    vazio.style.display = "none";
+
+    let html = '<button class="filtro" id="btn-voltar" style="margin-bottom:16px">\u2190 Voltar para clientes</button>' +
+      '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
+      '<th>Data</th><th>Hora</th><th>Pessoas</th><th>Status</th><th>Observações</th>' +
+      '</tr></thead><tbody>';
+    doCliente.forEach(function (r) {
+      html += '<tr>' +
+        '<td>' + formatarData(r.data_reserva) + '</td>' +
+        '<td>' + r.horario.slice(0, 5) + '</td>' +
+        '<td>' + r.num_pessoas + '</td>' +
+        '<td><span class="badge ' + r.status + '">' + r.status + '</span></td>' +
+        '<td>' + escapar(r.observacoes || "") + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div>';
+    lista.innerHTML = html;
+    document.getElementById("btn-voltar").addEventListener("click", desenharClientes);
+  }
+
+  function escapar(texto) {
+    const d = document.createElement("div");
+    d.textContent = texto || "";
+    return d.innerHTML;
+  }
+
+  // ===== MUDAR STATUS =====
+  async function mudarStatus(id, novoStatus, botao, janelaWhats) {
+    botao.disabled = true;
+    try {
+      const resp = await fetch(SUPABASE_URL + "/rest/v1/reservas?id=eq." + id, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + tokenAcesso,
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ status: novoStatus })
+      });
+      if (!resp.ok) throw new Error("Erro " + resp.status);
+      const r = reservas.find(function (x) { return x.id === id; });
+      if (r) r.status = novoStatus;
+
+      // Confirmou no banco \u2192 manda a janela para o WhatsApp com a mensagem pronta
+      if (novoStatus === "confirmada" && r && janelaWhats) {
+        janelaWhats.location.href = linkConfirmacao(r);
+      } else if (janelaWhats) {
+        janelaWhats.close();
+      }
+
+      desenharLista();
+    } catch (err) {
+      if (janelaWhats) janelaWhats.close();
+      alert("Não foi possível atualizar. Faça login de novo e tente outra vez.");
+      botao.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
