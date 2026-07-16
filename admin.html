@@ -239,51 +239,99 @@
   .btn-csv:hover{filter:brightness(1.1)}
 
   /* ---------- CALENDÁRIO ---------- */
-  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .cal-nav button{
-    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+  .cal-card{
+    background:linear-gradient(180deg,var(--carvao),#15100C);
+    border:1px solid rgba(247,179,43,.22);
+    border-radius:16px;
+    padding:20px 18px 16px;
+    box-shadow:0 12px 36px rgba(0,0,0,.4);
+  }
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+  .cal-seta{
     font-size:1.3rem;line-height:1;
-    background:var(--carvao);color:var(--amarelo);
-    border:1px solid rgba(247,179,43,.4);border-radius:8px;
-    padding:8px 18px;cursor:pointer;
+    background:var(--fumaca);color:var(--amarelo);
+    border:1px solid rgba(247,179,43,.35);border-radius:10px;
+    width:42px;height:38px;cursor:pointer;
+    transition:background .15s, transform .1s;
   }
-  .cal-nav button:hover{background:var(--fumaca)}
+  .cal-seta:hover{background:rgba(247,179,43,.15);transform:translateY(-1px)}
   .cal-titulo{
-    font-family:'Alfa Slab One',serif;font-size:1.25rem;
-    color:var(--branco);text-align:center;
+    font-family:'Alfa Slab One',serif;font-size:1.3rem;
+    color:var(--branco);text-align:center;flex:1;
   }
-  .cal-grade{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-titulo small{
+    display:block;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:.75rem;font-weight:600;
+    letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--laranja);
+  }
+  .cal-btn-hoje{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:.85rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    background:transparent;color:var(--cinza);
+    border:1px solid rgba(184,172,156,.35);border-radius:100px;
+    padding:8px 14px;cursor:pointer;
+  }
+  .cal-btn-hoje:hover{color:var(--amarelo);border-color:var(--amarelo)}
+  .cal-grade{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
   .cal-sem{
     font-family:'Barlow Condensed',sans-serif;font-weight:600;
-    font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;
-    color:var(--laranja);text-align:center;padding:4px 0;
+    font-size:.78rem;text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--laranja);text-align:center;padding:4px 0 6px;
   }
   .cal-dia{
-    background:var(--carvao);
-    border:1px solid rgba(255,248,238,.08);
-    border-radius:8px;
-    min-height:62px;padding:6px 7px;
-    color:var(--cinza);font-size:.9rem;
+    background:rgba(255,248,238,.03);
+    border:1px solid rgba(255,248,238,.07);
+    border-radius:10px;
+    min-height:66px;padding:7px 8px;
+    color:var(--cinza);font-size:.92rem;font-weight:600;
+    transition:transform .12s, background .15s, border-color .15s;
   }
+  .cal-dia.fds{background:rgba(247,179,43,.055)}
   .cal-dia.vazio{background:transparent;border-color:transparent}
-  .cal-dia.hoje{border-color:rgba(247,179,43,.7)}
-  .cal-dia.tem{cursor:pointer;color:var(--branco);border-color:rgba(247,179,43,.4)}
-  .cal-dia.tem:hover{background:var(--fumaca)}
-  .cal-dia.sel{background:rgba(247,179,43,.14);border-color:var(--amarelo)}
+  .cal-dia.hoje{border-color:var(--amarelo);box-shadow:inset 0 0 0 1px var(--amarelo)}
+  .cal-dia.tem{cursor:pointer;color:var(--branco);border-color:rgba(247,179,43,.45)}
+  .cal-dia.tem:hover{transform:translateY(-2px);background:rgba(247,179,43,.1)}
+  .cal-dia.sel{
+    background:rgba(247,179,43,.16);border-color:var(--amarelo);
+    box-shadow:0 0 0 1px var(--amarelo), 0 6px 18px rgba(232,100,27,.28);
+  }
   .cal-qtd{
-    display:block;width:fit-content;margin-top:5px;
+    display:block;width:fit-content;margin-top:6px;
     background:linear-gradient(180deg,var(--amarelo),var(--laranja));
     color:var(--preto);border-radius:100px;
-    font-size:.74rem;font-weight:700;padding:1px 8px;
+    font-size:.72rem;font-weight:700;padding:1px 8px;
+    box-shadow:0 2px 8px rgba(232,100,27,.35);
   }
+  .cal-qtd.ok{
+    background:linear-gradient(180deg,#63C987,var(--verde));
+    box-shadow:0 2px 8px rgba(76,175,110,.3);
+  }
+  .cal-legenda{
+    display:flex;gap:16px;flex-wrap:wrap;
+    margin-top:16px;color:var(--cinza);font-size:.82rem;
+  }
+  .cal-legenda span{display:flex;align-items:center;gap:6px}
+  .cal-bola{display:inline-block;width:12px;height:12px;border-radius:100px}
+  .cal-bola.amarela{background:linear-gradient(180deg,var(--amarelo),var(--laranja))}
+  .cal-bola.verde{background:linear-gradient(180deg,#63C987,var(--verde))}
+  .cal-bola.borda{background:transparent;border:2px solid var(--amarelo)}
   .cal-dia-titulo{
     font-family:'Alfa Slab One',serif;font-weight:400;
     font-size:1.05rem;margin:22px 0 12px;
   }
   @media (max-width:600px){
-    .cal-dia{min-height:48px;padding:4px 5px;font-size:.8rem}
-    .cal-qtd{font-size:.68rem;padding:0 6px}
+    .cal-grade{gap:4px}
+    .cal-dia{min-height:50px;padding:4px 5px;font-size:.8rem;border-radius:8px}
+    .cal-qtd{font-size:.66rem;padding:0 6px;margin-top:4px}
+    .cal-titulo{font-size:1.05rem}
+    .cal-btn-hoje{padding:7px 10px;font-size:.78rem}
   }
+  @media (prefers-reduced-motion: reduce){
+    .cal-dia,.cal-seta{transition:none}
+  }
+
   .linha-cliente{cursor:pointer}
   .linha-cliente:hover td{background:rgba(247,179,43,.07)}
   .nome-link{color:var(--amarelo);font-weight:600;text-decoration:underline;text-underline-offset:3px}
@@ -332,9 +380,6 @@
   <div class="container">
     <div class="filtros">
       <button class="filtro ativo" data-filtro="hoje">Hoje</button>
-      <button class="filtro" data-filtro="7dias">7 dias</button>
-      <button class="filtro" data-filtro="15dias">15 dias</button>
-      <button class="filtro" data-filtro="30dias">30 dias</button>
       <button class="filtro" data-filtro="pendente">Pendentes</button>
       <button class="filtro" data-filtro="confirmada">Confirmadas</button>
       <button class="filtro" data-filtro="todas">Todas</button>
@@ -552,12 +597,6 @@
   }
 
   // ===== DESENHAR (decide qual visão mostrar) =====
-  function somarDias(iso, n) {
-    const d = new Date(iso + "T12:00:00");
-    d.setDate(d.getDate() + n);
-    return d.toISOString().split("T")[0];
-  }
-
   function desenharLista() {
     if (filtroAtual === "planilha") { desenharPlanilha(); return; }
     if (filtroAtual === "clientes") { desenharClientes(); return; }
@@ -567,12 +606,6 @@
     let filtradas = reservas;
     if (filtroAtual === "hoje") {
       filtradas = reservas.filter(function (r) { return r.data_reserva === hoje && r.status !== "cancelada"; });
-    } else if (filtroAtual === "7dias" || filtroAtual === "15dias" || filtroAtual === "30dias") {
-      const dias = filtroAtual === "7dias" ? 7 : (filtroAtual === "15dias" ? 15 : 30);
-      const limite = somarDias(hoje, dias);
-      filtradas = reservas.filter(function (r) {
-        return r.data_reserva >= hoje && r.data_reserva <= limite && r.status !== "cancelada";
-      });
     } else if (filtroAtual === "pendente" || filtroAtual === "confirmada") {
       filtradas = reservas.filter(function (r) { return r.status === filtroAtual; });
     }
@@ -659,7 +692,9 @@
       if (r.status === "cancelada") return;
       if (r.data_reserva.slice(0, 7) !== mesCal) return;
       const d = Number(r.data_reserva.slice(8, 10));
-      porDia[d] = (porDia[d] || 0) + 1;
+      if (!porDia[d]) porDia[d] = { total: 0, pendentes: 0 };
+      porDia[d].total++;
+      if (r.status === "pendente") porDia[d].pendentes++;
       totalMes++;
     });
 
@@ -668,10 +703,14 @@
     vazio.style.display = "none";
 
     let html =
+      '<div class="cal-card">' +
       '<div class="cal-nav">' +
-        '<button id="cal-ant" aria-label="M\u00EAs anterior">\u2039</button>' +
-        '<div class="cal-titulo">' + nomesMes[mes - 1] + ' ' + ano + '</div>' +
-        '<button id="cal-prox" aria-label="Pr\u00F3ximo m\u00EAs">\u203A</button>' +
+        '<button class="cal-seta" id="cal-ant" aria-label="M\u00EAs anterior">\u2039</button>' +
+        '<div class="cal-titulo"><small>Calend\u00E1rio de reservas</small>' + nomesMes[mes - 1] + ' ' + ano + '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<button class="cal-btn-hoje" id="cal-hoje">Hoje</button>' +
+          '<button class="cal-seta" id="cal-prox" aria-label="Pr\u00F3ximo m\u00EAs">\u203A</button>' +
+        '</div>' +
       '</div>' +
       '<div class="cal-grade">';
 
@@ -683,15 +722,23 @@
     }
     for (let d = 1; d <= diasNoMes; d++) {
       const iso = mesCal + "-" + String(d).padStart(2, "0");
+      const diaSemana = (primeiroDiaSemana + d - 1) % 7;
       let classes = "cal-dia";
+      if (diaSemana === 0 || diaSemana === 5 || diaSemana === 6) classes += " fds";
       if (iso === hoje) classes += " hoje";
       if (porDia[d]) classes += " tem";
       if (iso === diaEscolhido) classes += " sel";
       html += '<div class="' + classes + '" data-data="' + iso + '">' + d +
-        (porDia[d] ? '<span class="cal-qtd">' + porDia[d] + '</span>' : '') +
+        (porDia[d] ? '<span class="cal-qtd' + (porDia[d].pendentes > 0 ? '' : ' ok') + '">' + porDia[d].total + '</span>' : '') +
       '</div>';
     }
-    html += '</div>';
+    html += '</div>' +
+      '<div class="cal-legenda">' +
+        '<span><i class="cal-bola amarela"></i> tem pendentes</span>' +
+        '<span><i class="cal-bola verde"></i> todas confirmadas</span>' +
+        '<span><i class="cal-bola borda"></i> hoje</span>' +
+      '</div>' +
+      '</div>';
 
     if (diaEscolhido && diaEscolhido.slice(0, 7) === mesCal) {
       html += '<div class="cal-dia-titulo">Reservas de ' + formatarData(diaEscolhido) + '</div>';
@@ -711,6 +758,11 @@
     // navegação entre meses
     document.getElementById("cal-ant").addEventListener("click", function () { mudarMes(-1); });
     document.getElementById("cal-prox").addEventListener("click", function () { mudarMes(1); });
+    document.getElementById("cal-hoje").addEventListener("click", function () {
+      mesCal = dataHojeISO().slice(0, 7);
+      diaEscolhido = null;
+      desenharCalendario();
+    });
 
     // clique nos dias com reserva
     lista.querySelectorAll(".cal-dia.tem").forEach(function (c) {
