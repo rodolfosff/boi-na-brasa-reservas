@@ -237,6 +237,53 @@
     padding:11px 20px;cursor:pointer;
   }
   .btn-csv:hover{filter:brightness(1.1)}
+
+  /* ---------- CALENDÁRIO ---------- */
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .cal-nav button{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:1.3rem;line-height:1;
+    background:var(--carvao);color:var(--amarelo);
+    border:1px solid rgba(247,179,43,.4);border-radius:8px;
+    padding:8px 18px;cursor:pointer;
+  }
+  .cal-nav button:hover{background:var(--fumaca)}
+  .cal-titulo{
+    font-family:'Alfa Slab One',serif;font-size:1.25rem;
+    color:var(--branco);text-align:center;
+  }
+  .cal-grade{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-sem{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;
+    color:var(--laranja);text-align:center;padding:4px 0;
+  }
+  .cal-dia{
+    background:var(--carvao);
+    border:1px solid rgba(255,248,238,.08);
+    border-radius:8px;
+    min-height:62px;padding:6px 7px;
+    color:var(--cinza);font-size:.9rem;
+  }
+  .cal-dia.vazio{background:transparent;border-color:transparent}
+  .cal-dia.hoje{border-color:rgba(247,179,43,.7)}
+  .cal-dia.tem{cursor:pointer;color:var(--branco);border-color:rgba(247,179,43,.4)}
+  .cal-dia.tem:hover{background:var(--fumaca)}
+  .cal-dia.sel{background:rgba(247,179,43,.14);border-color:var(--amarelo)}
+  .cal-qtd{
+    display:block;width:fit-content;margin-top:5px;
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    color:var(--preto);border-radius:100px;
+    font-size:.74rem;font-weight:700;padding:1px 8px;
+  }
+  .cal-dia-titulo{
+    font-family:'Alfa Slab One',serif;font-weight:400;
+    font-size:1.05rem;margin:22px 0 12px;
+  }
+  @media (max-width:600px){
+    .cal-dia{min-height:48px;padding:4px 5px;font-size:.8rem}
+    .cal-qtd{font-size:.68rem;padding:0 6px}
+  }
   .linha-cliente{cursor:pointer}
   .linha-cliente:hover td{background:rgba(247,179,43,.07)}
   .nome-link{color:var(--amarelo);font-weight:600;text-decoration:underline;text-underline-offset:3px}
@@ -285,9 +332,13 @@
   <div class="container">
     <div class="filtros">
       <button class="filtro ativo" data-filtro="hoje">Hoje</button>
+      <button class="filtro" data-filtro="7dias">7 dias</button>
+      <button class="filtro" data-filtro="15dias">15 dias</button>
+      <button class="filtro" data-filtro="30dias">30 dias</button>
       <button class="filtro" data-filtro="pendente">Pendentes</button>
       <button class="filtro" data-filtro="confirmada">Confirmadas</button>
       <button class="filtro" data-filtro="todas">Todas</button>
+      <button class="filtro" data-filtro="calendario">&#x1F4C5; Calend&aacute;rio</button>
       <button class="filtro" data-filtro="planilha">Planilha</button>
       <button class="filtro" data-filtro="clientes">Clientes</button>
     </div>
@@ -501,14 +552,27 @@
   }
 
   // ===== DESENHAR (decide qual visão mostrar) =====
+  function somarDias(iso, n) {
+    const d = new Date(iso + "T12:00:00");
+    d.setDate(d.getDate() + n);
+    return d.toISOString().split("T")[0];
+  }
+
   function desenharLista() {
     if (filtroAtual === "planilha") { desenharPlanilha(); return; }
     if (filtroAtual === "clientes") { desenharClientes(); return; }
+    if (filtroAtual === "calendario") { desenharCalendario(); return; }
 
     const hoje = dataHojeISO();
     let filtradas = reservas;
     if (filtroAtual === "hoje") {
       filtradas = reservas.filter(function (r) { return r.data_reserva === hoje && r.status !== "cancelada"; });
+    } else if (filtroAtual === "7dias" || filtroAtual === "15dias" || filtroAtual === "30dias") {
+      const dias = filtroAtual === "7dias" ? 7 : (filtroAtual === "15dias" ? 15 : 30);
+      const limite = somarDias(hoje, dias);
+      filtradas = reservas.filter(function (r) {
+        return r.data_reserva >= hoje && r.data_reserva <= limite && r.status !== "cancelada";
+      });
     } else if (filtroAtual === "pendente" || filtroAtual === "confirmada") {
       filtradas = reservas.filter(function (r) { return r.status === filtroAtual; });
     }
@@ -518,6 +582,13 @@
     vazio.style.display = filtradas.length === 0 ? "block" : "none";
 
     filtradas.forEach(function (r) {
+      lista.appendChild(montarCartao(r));
+    });
+    ligarBotoes();
+  }
+
+  // ===== MONTA UM CARTÃO DE RESERVA =====
+  function montarCartao(r) {
       const div = document.createElement("div");
       div.className = "cartao " + r.status;
 
@@ -551,9 +622,11 @@
           botoes +
         '</div>';
 
-      lista.appendChild(div);
-    });
+      return div;
+  }
 
+  // ===== LIGA OS BOTÕES DOS CARTÕES =====
+  function ligarBotoes() {
     lista.querySelectorAll("button[data-acao]").forEach(function (b) {
       b.addEventListener("click", function () {
         // Abre a janela AGORA (durante o clique) para o navegador não bloquear o pop-up.
@@ -565,6 +638,96 @@
         mudarStatus(b.dataset.id, b.dataset.acao, b, janelaWhats);
       });
     });
+  }
+
+  // ===== CALENDÁRIO =====
+  let mesCal = null;        // "YYYY-MM" do mês exibido
+  let diaEscolhido = null;  // "YYYY-MM-DD" selecionado
+
+  function desenharCalendario() {
+    if (!mesCal) mesCal = dataHojeISO().slice(0, 7);
+    const ano = Number(mesCal.slice(0, 4));
+    const mes = Number(mesCal.slice(5, 7));
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+    const primeiroDiaSemana = new Date(ano, mes - 1, 1).getDay();
+    const hoje = dataHojeISO();
+
+    // conta reservas (não canceladas) por dia do mês exibido
+    const porDia = {};
+    let totalMes = 0;
+    reservas.forEach(function (r) {
+      if (r.status === "cancelada") return;
+      if (r.data_reserva.slice(0, 7) !== mesCal) return;
+      const d = Number(r.data_reserva.slice(8, 10));
+      porDia[d] = (porDia[d] || 0) + 1;
+      totalMes++;
+    });
+
+    const nomesMes = ["Janeiro","Fevereiro","Mar\u00E7o","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    contador.textContent = totalMes + (totalMes === 1 ? " reserva em " : " reservas em ") + nomesMes[mes - 1] + " de " + ano;
+    vazio.style.display = "none";
+
+    let html =
+      '<div class="cal-nav">' +
+        '<button id="cal-ant" aria-label="M\u00EAs anterior">\u2039</button>' +
+        '<div class="cal-titulo">' + nomesMes[mes - 1] + ' ' + ano + '</div>' +
+        '<button id="cal-prox" aria-label="Pr\u00F3ximo m\u00EAs">\u203A</button>' +
+      '</div>' +
+      '<div class="cal-grade">';
+
+    ["Dom","Seg","Ter","Qua","Qui","Sex","S\u00E1b"].forEach(function (n) {
+      html += '<div class="cal-sem">' + n + '</div>';
+    });
+    for (let v = 0; v < primeiroDiaSemana; v++) {
+      html += '<div class="cal-dia vazio"></div>';
+    }
+    for (let d = 1; d <= diasNoMes; d++) {
+      const iso = mesCal + "-" + String(d).padStart(2, "0");
+      let classes = "cal-dia";
+      if (iso === hoje) classes += " hoje";
+      if (porDia[d]) classes += " tem";
+      if (iso === diaEscolhido) classes += " sel";
+      html += '<div class="' + classes + '" data-data="' + iso + '">' + d +
+        (porDia[d] ? '<span class="cal-qtd">' + porDia[d] + '</span>' : '') +
+      '</div>';
+    }
+    html += '</div>';
+
+    if (diaEscolhido && diaEscolhido.slice(0, 7) === mesCal) {
+      html += '<div class="cal-dia-titulo">Reservas de ' + formatarData(diaEscolhido) + '</div>';
+    }
+
+    lista.innerHTML = html;
+
+    // reservas do dia selecionado
+    if (diaEscolhido && diaEscolhido.slice(0, 7) === mesCal) {
+      const doDia = reservas.filter(function (r) {
+        return r.data_reserva === diaEscolhido && r.status !== "cancelada";
+      });
+      doDia.forEach(function (r) { lista.appendChild(montarCartao(r)); });
+      ligarBotoes();
+    }
+
+    // navegação entre meses
+    document.getElementById("cal-ant").addEventListener("click", function () { mudarMes(-1); });
+    document.getElementById("cal-prox").addEventListener("click", function () { mudarMes(1); });
+
+    // clique nos dias com reserva
+    lista.querySelectorAll(".cal-dia.tem").forEach(function (c) {
+      c.addEventListener("click", function () {
+        diaEscolhido = (diaEscolhido === c.dataset.data) ? null : c.dataset.data;
+        desenharCalendario();
+      });
+    });
+  }
+
+  function mudarMes(delta) {
+    const ano = Number(mesCal.slice(0, 4));
+    const mes = Number(mesCal.slice(5, 7));
+    const d = new Date(ano, mes - 1 + delta, 1);
+    mesCal = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    diaEscolhido = null;
+    desenharCalendario();
   }
 
   // ===== PLANILHA DE CONFIRMADAS =====
