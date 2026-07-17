@@ -317,6 +317,24 @@
   .cal-bola.amarela{background:linear-gradient(180deg,var(--amarelo),var(--laranja))}
   .cal-bola.verde{background:linear-gradient(180deg,#63C987,var(--verde))}
   .cal-bola.borda{background:transparent;border:2px solid var(--amarelo)}
+  .resumo-areas{
+    display:flex;flex-wrap:wrap;gap:10px;
+    margin:0 0 16px;
+  }
+  .ra-total{
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    color:var(--preto);font-weight:700;
+    border-radius:100px;padding:6px 16px;font-size:.9rem;
+    box-shadow:0 3px 10px rgba(232,100,27,.3);
+  }
+  .ra-item{
+    background:var(--carvao);
+    border:1px solid rgba(247,179,43,.35);
+    color:var(--branco);
+    border-radius:100px;padding:6px 14px;font-size:.9rem;
+  }
+  .ra-item strong{color:var(--amarelo)}
+  .area-info{color:var(--amarelo);font-weight:600}
   .cal-dia-titulo{
     font-family:'Alfa Slab One',serif;font-weight:400;
     font-size:1.05rem;margin:22px 0 12px;
@@ -646,7 +664,7 @@
         '<div class="info-reserva">' +
           '<span class="badge ' + r.status + '">' + r.status + '</span>' +
           '<div class="nome-cliente">' + escapar(r.nome) + '</div>' +
-          '<div class="detalhes"><strong>' + formatarData(r.data_reserva) + '</strong> às <strong>' + r.horario.slice(0,5) + '</strong> · ' + r.num_pessoas + ' pessoa(s) · ' + escapar(r.telefone) + '</div>' +
+          '<div class="detalhes"><strong>' + formatarData(r.data_reserva) + '</strong> às <strong>' + r.horario.slice(0,5) + '</strong> · ' + r.num_pessoas + ' pessoa(s) · ' + escapar(r.telefone) + (r.area ? ' · <span class="area-info">' + escapar(r.area) + '</span>' : '') + '</div>' +
           (r.observacoes ? '<div class="obs">\u201C' + escapar(r.observacoes) + '\u201D</div>' : '') +
           (vezes > 1 ? '<div class="fiel">' + E_ESTRELA + ' Cliente com ' + vezes + ' reservas conosco</div>' : '') +
         '</div>' +
@@ -740,17 +758,32 @@
       '</div>' +
       '</div>';
 
+    let doDia = [];
     if (diaEscolhido && diaEscolhido.slice(0, 7) === mesCal) {
+      doDia = reservas.filter(function (r) {
+        return r.data_reserva === diaEscolhido && r.status !== "cancelada";
+      });
+
+      // resumo por área do dia
+      const porArea = {};
+      doDia.forEach(function (r) {
+        const a = r.area || "Sem área definida";
+        porArea[a] = (porArea[a] || 0) + 1;
+      });
+
       html += '<div class="cal-dia-titulo">Reservas de ' + formatarData(diaEscolhido) + '</div>';
+      html += '<div class="resumo-areas">' +
+        '<span class="ra-total">' + doDia.length + (doDia.length === 1 ? ' reserva' : ' reservas') + ' no total</span>';
+      Object.keys(porArea).sort(function (a, b) { return porArea[b] - porArea[a]; }).forEach(function (a) {
+        html += '<span class="ra-item">' + escapar(a) + ': <strong>' + porArea[a] + '</strong></span>';
+      });
+      html += '</div>';
     }
 
     lista.innerHTML = html;
 
-    // reservas do dia selecionado
-    if (diaEscolhido && diaEscolhido.slice(0, 7) === mesCal) {
-      const doDia = reservas.filter(function (r) {
-        return r.data_reserva === diaEscolhido && r.status !== "cancelada";
-      });
+    // cartões das reservas do dia selecionado
+    if (doDia.length > 0) {
       doDia.forEach(function (r) { lista.appendChild(montarCartao(r)); });
       ligarBotoes();
     }
@@ -790,7 +823,7 @@
     if (confirmadas.length === 0) { lista.innerHTML = ""; return; }
 
     let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
-      '<th>Data</th><th>Hora</th><th>Nome</th><th>Telefone</th><th>Pessoas</th><th>Observações</th>' +
+      '<th>Data</th><th>Hora</th><th>Nome</th><th>Telefone</th><th>Pessoas</th><th>Área</th><th>Observações</th>' +
       '</tr></thead><tbody>';
     confirmadas.forEach(function (r) {
       html += '<tr>' +
@@ -799,6 +832,7 @@
         '<td>' + escapar(r.nome) + '</td>' +
         '<td>' + escapar(r.telefone) + '</td>' +
         '<td>' + r.num_pessoas + '</td>' +
+        '<td>' + escapar(r.area || "") + '</td>' +
         '<td>' + escapar(r.observacoes || "") + '</td>' +
       '</tr>';
     });
@@ -812,7 +846,7 @@
   }
 
   function abrirNoGoogleSheets(linhas) {
-    let tsv = "Data\tHora\tNome\tTelefone\tPessoas\tObservacoes\n";
+    let tsv = "Data\tHora\tNome\tTelefone\tPessoas\tArea\tObservacoes\n";
     linhas.forEach(function (r) {
       tsv += [
         formatarData(r.data_reserva),
@@ -820,6 +854,7 @@
         r.nome,
         r.telefone,
         r.num_pessoas,
+        r.area || "",
         (r.observacoes || "").replace(/[\t\n]/g, " ")
       ].join("\t") + "\n";
     });

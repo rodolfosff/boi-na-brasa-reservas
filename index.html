@@ -497,6 +497,17 @@
       </div>
 
       <div class="campo">
+        <label for="area">Área da mesa</label>
+        <select id="area" name="area" required>
+          <option value="" disabled selected>Onde você prefere sentar?</option>
+          <option value="Área da entrada">Área da entrada</option>
+          <option value="Segunda área">Segunda área</option>
+          <option value="Área do show">Área do show</option>
+          <option value="Parte de dentro">Parte de dentro</option>
+        </select>
+      </div>
+
+      <div class="campo">
         <label for="pessoas">Número de pessoas</label>
         <select id="pessoas" name="pessoas" required>
           <option value="" disabled selected>Quantas pessoas?</option>
@@ -564,11 +575,12 @@
     const telefone = document.getElementById("telefone").value.trim();
     const data = campoData.value;
     const horario = document.getElementById("horario").value;
+    const area = document.getElementById("area").value;
     const pessoas = document.getElementById("pessoas").value;
     const obs = document.getElementById("obs").value.trim();
 
     // Validação simples
-    if (!nome || !telefone || !data || !horario || !pessoas) {
+    if (!nome || !telefone || !data || !horario || !area || !pessoas) {
       aviso.className = "aviso erro";
       aviso.textContent = "Preencha todos os campos obrigatórios para reservar.";
       return;
@@ -596,6 +608,7 @@
           telefone: telefone,
           data_reserva: data,
           horario: horario,
+          area: area,
           num_pessoas: parseInt(pessoas, 10),
           observacoes: obs || null
         })
