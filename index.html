@@ -206,6 +206,85 @@
     .faixa-item{padding:18px 16px}
   }
 
+  /* ---------- MÚSICA AO VIVO ---------- */
+  .secao-musica{padding:72px 0 8px;position:relative}
+  .palco{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:18px;
+    max-width:920px;margin:0 auto;
+  }
+  @media (max-width:760px){.palco{grid-template-columns:1fr;max-width:420px}}
+  .show{
+    position:relative;
+    background:linear-gradient(180deg,var(--carvao),#15100C);
+    border:1px solid rgba(247,179,43,.22);
+    border-radius:14px;
+    padding:30px 22px 26px;
+    text-align:center;
+    overflow:hidden;
+    transition:transform .22s ease, box-shadow .25s ease, border-color .2s ease;
+  }
+  .show::before{
+    content:"";position:absolute;top:0;left:18%;right:18%;height:2px;
+    background:linear-gradient(90deg,transparent,var(--amarelo),transparent);
+    opacity:.75;
+  }
+  .show::after{
+    content:"";position:absolute;inset:auto -30% -55% -30%;height:70%;
+    background:radial-gradient(ellipse at center, rgba(232,100,27,.16), transparent 70%);
+    pointer-events:none;
+  }
+  .show:hover{
+    transform:translateY(-6px);
+    border-color:rgba(247,179,43,.65);
+    box-shadow:0 16px 38px rgba(232,100,27,.26);
+  }
+  .show-dia{
+    display:inline-block;
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:.85rem;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--preto);
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    border-radius:100px;padding:5px 18px;
+    margin-bottom:16px;
+    box-shadow:0 3px 12px rgba(232,100,27,.3);
+  }
+  .show-artista{
+    font-family:'Alfa Slab One',serif;font-weight:400;
+    font-size:1.4rem;line-height:1.15;
+    margin-bottom:7px;
+  }
+  .show-hora{color:var(--cinza);font-size:.95rem;letter-spacing:.3px}
+  .show-hora strong{color:var(--amarelo);font-weight:700}
+
+  /* equalizador tocando */
+  .eq{
+    display:flex;gap:4px;align-items:flex-end;justify-content:center;
+    height:28px;margin-bottom:16px;
+  }
+  .eq i{
+    width:5px;height:100%;
+    border-radius:3px 3px 0 0;
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    transform-origin:bottom;
+    animation:tocar 1.05s ease-in-out infinite;
+  }
+  .eq i:nth-child(1){animation-delay:0s}
+  .eq i:nth-child(2){animation-delay:.18s}
+  .eq i:nth-child(3){animation-delay:.36s}
+  .eq i:nth-child(4){animation-delay:.54s}
+  .eq i:nth-child(5){animation-delay:.72s}
+  @keyframes tocar{
+    0%,100%{transform:scaleY(.30)}
+    50%{transform:scaleY(1)}
+  }
+  .palco .show:nth-child(2){transition-delay:.1s}
+  .palco .show:nth-child(3){transition-delay:.2s}
+  @media (prefers-reduced-motion: reduce){
+    .eq i{animation:none;transform:scaleY(.7)}
+    .show{transition:none}
+    .palco .show{transition-delay:0s}
+  }
+
   /* ---------- RESERVA ---------- */
   .secao-reserva{padding:76px 0 60px}
   .titulo-secao{
@@ -324,7 +403,7 @@
     <br>
     <span class="selo">Tradição e qualidade desde 1985</span>
     <h1>Sua mesa na melhor<br><span class="fogo">brasa</span> de Surubim</h1>
-    <p>Churrasco no ponto, pizzas de dar água na boca e música ao vivo nos fins de semana. Garanta seu lugar antes de chegar.</p>
+    <p>Churrasco no ponto, pizzas de dar água na boca e música ao vivo de quinta a sábado. Garanta seu lugar antes de chegar.</p>
     <a class="btn-hero" href="#reservar">Fazer minha reserva</a>
   </div>
 </section>
@@ -340,8 +419,35 @@
       <span class="valor">Churrascaria &amp; Pizzaria</span>
     </div>
     <div class="faixa-item revela">
-      <span class="rotulo">Fim de semana</span>
-      <span class="valor">Música ao vivo &#x1F3B6;</span>
+      <span class="rotulo">Qui &bull; Sex &bull; S&aacute;b</span>
+      <span class="valor">Música ao vivo &agrave;s 21h &#x1F3B6;</span>
+    </div>
+  </div>
+</section>
+
+<section class="secao-musica" id="musica">
+  <div class="container">
+    <h2 class="titulo-secao revela">Música ao vivo</h2>
+    <p class="sub-secao revela">Toda semana tem show na brasa. Reserve sua mesa e chegue cedo pra pegar o melhor lugar.</p>
+    <div class="palco">
+      <div class="show revela">
+        <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="show-dia">Quinta</span>
+        <div class="show-artista">Rafa Alyce</div>
+        <div class="show-hora">a partir das <strong>21h</strong></div>
+      </div>
+      <div class="show revela">
+        <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="show-dia">Sexta</span>
+        <div class="show-artista">Gyl Macêta</div>
+        <div class="show-hora">a partir das <strong>21h</strong></div>
+      </div>
+      <div class="show revela">
+        <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <span class="show-dia">Sábado</span>
+        <div class="show-artista">Música ao vivo</div>
+        <div class="show-hora">a partir das <strong>21h</strong></div>
+      </div>
     </div>
   </div>
 </section>
