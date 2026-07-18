@@ -354,6 +354,85 @@
   .linha-cliente:hover td{background:rgba(247,179,43,.07)}
   .nome-link{color:var(--amarelo);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 
+  /* ---------- DASHBOARD ---------- */
+  .dash-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+    margin-bottom:8px;
+  }
+  @media (max-width:720px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
+  .dash-card{
+    background:linear-gradient(180deg,var(--carvao),#15100C);
+    border:1px solid rgba(247,179,43,.22);
+    border-radius:14px;
+    padding:20px 16px;
+    text-align:center;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .dash-card.atencao{border-color:var(--amarelo);box-shadow:0 0 0 1px var(--amarelo), 0 8px 24px rgba(232,100,27,.2)}
+  .dc-num{
+    font-family:'Alfa Slab One',serif;font-size:2.2rem;line-height:1.1;
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .dc-rot{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:.85rem;letter-spacing:2px;text-transform:uppercase;
+    color:var(--branco);
+  }
+  .dc-sub{font-size:.78rem;color:var(--cinza)}
+  .dash-sec{
+    font-family:'Alfa Slab One',serif;font-weight:400;
+    font-size:1.02rem;margin:22px 0 12px;
+  }
+  .dash-graf-card{
+    background:linear-gradient(180deg,var(--carvao),#15100C);
+    border:1px solid rgba(247,179,43,.22);
+    border-radius:14px;
+    padding:18px 16px 12px;
+  }
+  .dash-graf{display:flex;gap:8px;align-items:stretch;height:150px}
+  .dg-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+  .dg-num{font-size:.85rem;font-weight:700;color:var(--amarelo);min-height:1.1em}
+  .dg-bar{
+    width:100%;max-width:46px;
+    background:linear-gradient(180deg,var(--amarelo),var(--laranja));
+    border-radius:6px 6px 0 0;
+    box-shadow:0 4px 12px rgba(232,100,27,.25);
+  }
+  .dg-bar.zero{background:rgba(255,248,238,.08);box-shadow:none}
+  .dg-lab{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:.72rem;letter-spacing:1px;text-transform:uppercase;
+    color:var(--cinza);text-align:center;line-height:1.25;
+  }
+  .criada{font-size:.8rem;color:var(--cinza);margin-top:5px;opacity:.85}
+
+  /* ---------- AVISO DE NOVA RESERVA ---------- */
+  #toast-nova{
+    position:fixed;top:18px;right:18px;z-index:200;
+    display:none;
+    background:linear-gradient(180deg,var(--carvao),#15100C);
+    border:1px solid var(--amarelo);
+    border-radius:12px;
+    padding:16px 20px;
+    max-width:320px;
+    box-shadow:0 14px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(247,179,43,.25);
+    cursor:pointer;
+    animation:toastEntra .35s ease-out both;
+  }
+  @keyframes toastEntra{
+    from{opacity:0;transform:translateY(-14px)}
+    to{opacity:1;transform:none}
+  }
+  #toast-nova .t-titulo{
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:.85rem;letter-spacing:2px;text-transform:uppercase;
+    color:var(--amarelo);margin-bottom:4px;
+  }
+  #toast-nova .t-corpo{font-size:.95rem;color:var(--branco)}
+  @media (prefers-reduced-motion: reduce){#toast-nova{animation:none}}
+
   #vazio{
     display:none;text-align:center;color:var(--cinza);
     padding:50px 20px;
@@ -402,7 +481,7 @@
       <button class="filtro" data-filtro="confirmada">Confirmadas</button>
       <button class="filtro" data-filtro="todas">Todas</button>
       <button class="filtro" data-filtro="calendario">&#x1F4C5; Calend&aacute;rio</button>
-      <button class="filtro" data-filtro="planilha">Planilha</button>
+      <button class="filtro" data-filtro="dashboard">&#x1F4CA; Dashboard</button>
       <button class="filtro" data-filtro="clientes">Clientes</button>
     </div>
     <div id="contador"></div>
@@ -465,6 +544,9 @@
     telaLogin.style.display = "none";
     telaPainel.style.display = "block";
     btnSair.style.display = "inline-block";
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
     carregarReservas();
   }
   function voltarAoLogin() {
@@ -543,6 +625,7 @@
       if (resp.status === 401) { voltarAoLogin(); return; }
       if (!resp.ok) throw new Error("Erro " + resp.status);
       reservas = await resp.json();
+      idsConhecidos = new Set(reservas.map(function (r) { return r.id; }));
       desenharLista();
     } catch (err) {
       lista.innerHTML = "<p style='color:#FF8A5C'>Erro ao carregar reservas. Atualize a página e faça login de novo.</p>";
@@ -570,6 +653,14 @@
   function formatarData(iso) {
     const partes = iso.split("-");
     return partes[2] + "/" + partes[1] + "/" + partes[0];
+  }
+
+  function formatarCriada(ts) {
+    let t = String(ts).replace(" ", "T");
+    if (/[+-]\d\d$/.test(t)) t += ":00";
+    const d = new Date(t);
+    if (isNaN(d)) return "";
+    return d.toLocaleDateString("pt-BR") + " \u00E0s " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   }
 
   function telDe(r) {
@@ -616,7 +707,7 @@
 
   // ===== DESENHAR (decide qual visão mostrar) =====
   function desenharLista() {
-    if (filtroAtual === "planilha") { desenharPlanilha(); return; }
+    if (filtroAtual === "dashboard") { desenharDashboard(); return; }
     if (filtroAtual === "clientes") { desenharClientes(); return; }
     if (filtroAtual === "calendario") { desenharCalendario(); return; }
 
@@ -667,6 +758,7 @@
           '<div class="detalhes"><strong>' + formatarData(r.data_reserva) + '</strong> às <strong>' + r.horario.slice(0,5) + '</strong> · ' + r.num_pessoas + ' pessoa(s) · ' + escapar(r.telefone) + (r.area ? ' · <span class="area-info">' + escapar(r.area) + '</span>' : '') + '</div>' +
           (r.observacoes ? '<div class="obs">\u201C' + escapar(r.observacoes) + '\u201D</div>' : '') +
           (vezes > 1 ? '<div class="fiel">' + E_ESTRELA + ' Cliente com ' + vezes + ' reservas conosco</div>' : '') +
+          (r.criada_em ? '<div class="criada">Reserva feita em ' + formatarCriada(r.criada_em) + '</div>' : '') +
         '</div>' +
         '<div class="acoes">' +
           '<a class="b-whats" href="' + linkWhats + '" target="_blank" rel="noopener">WhatsApp</a>' +
@@ -815,55 +907,78 @@
     desenharCalendario();
   }
 
-  // ===== PLANILHA DE CONFIRMADAS =====
-  function desenharPlanilha() {
-    const confirmadas = reservas.filter(function (r) { return r.status === "confirmada"; });
-    contador.textContent = confirmadas.length + (confirmadas.length === 1 ? " reserva confirmada" : " reservas confirmadas");
-    vazio.style.display = confirmadas.length === 0 ? "block" : "none";
-    if (confirmadas.length === 0) { lista.innerHTML = ""; return; }
-
-    let html = '<div class="tabela-wrap"><table class="tabela"><thead><tr>' +
-      '<th>Data</th><th>Hora</th><th>Nome</th><th>Telefone</th><th>Pessoas</th><th>Área</th><th>Observações</th>' +
-      '</tr></thead><tbody>';
-    confirmadas.forEach(function (r) {
-      html += '<tr>' +
-        '<td>' + formatarData(r.data_reserva) + '</td>' +
-        '<td>' + r.horario.slice(0, 5) + '</td>' +
-        '<td>' + escapar(r.nome) + '</td>' +
-        '<td>' + escapar(r.telefone) + '</td>' +
-        '<td>' + r.num_pessoas + '</td>' +
-        '<td>' + escapar(r.area || "") + '</td>' +
-        '<td>' + escapar(r.observacoes || "") + '</td>' +
-      '</tr>';
-    });
-    html += '</tbody></table></div>' +
-      '<button class="btn-csv" id="btn-sheets">Abrir no Google Sheets</button>';
-
-    lista.innerHTML = html;
-    document.getElementById("btn-sheets").addEventListener("click", function () {
-      abrirNoGoogleSheets(confirmadas);
-    });
+  // ===== DASHBOARD =====
+  function isoDe(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  function abrirNoGoogleSheets(linhas) {
-    let tsv = "Data\tHora\tNome\tTelefone\tPessoas\tArea\tObservacoes\n";
-    linhas.forEach(function (r) {
-      tsv += [
-        formatarData(r.data_reserva),
-        r.horario.slice(0, 5),
-        r.nome,
-        r.telefone,
-        r.num_pessoas,
-        r.area || "",
-        (r.observacoes || "").replace(/[\t\n]/g, " ")
-      ].join("\t") + "\n";
+  function desenharDashboard() {
+    const hoje = dataHojeISO();
+    const ativos = reservas.filter(function (r) { return r.status !== "cancelada"; });
+
+    // semana atual (domingo a sábado)
+    const dHoje = new Date(hoje + "T12:00:00");
+    const iniSem = new Date(dHoje); iniSem.setDate(dHoje.getDate() - dHoje.getDay());
+    const fimSem = new Date(iniSem); fimSem.setDate(iniSem.getDate() + 6);
+    const iniISO = isoDe(iniSem), fimISO = isoDe(fimSem);
+    const mesAtual = hoje.slice(0, 7);
+
+    const deHoje = ativos.filter(function (r) { return r.data_reserva === hoje; });
+    const daSemana = ativos.filter(function (r) { return r.data_reserva >= iniISO && r.data_reserva <= fimISO; });
+    const doMes = ativos.filter(function (r) { return r.data_reserva.slice(0, 7) === mesAtual; });
+    const pendentes = reservas.filter(function (r) { return r.status === "pendente"; });
+    const pessoasHoje = deHoje.reduce(function (t, r) { return t + (r.num_pessoas || 0); }, 0);
+
+    contador.textContent = "Vis\u00E3o geral das reservas";
+    vazio.style.display = "none";
+
+    let html = '<div class="dash-grid">' +
+      '<div class="dash-card"><span class="dc-num">' + deHoje.length + '</span><span class="dc-rot">Hoje</span><span class="dc-sub">' + pessoasHoje + ' pessoa(s)</span></div>' +
+      '<div class="dash-card"><span class="dc-num">' + daSemana.length + '</span><span class="dc-rot">Esta semana</span><span class="dc-sub">' + formatarData(iniISO).slice(0,5) + ' a ' + formatarData(fimISO).slice(0,5) + '</span></div>' +
+      '<div class="dash-card"><span class="dc-num">' + doMes.length + '</span><span class="dc-rot">Este m\u00EAs</span><span class="dc-sub">sem contar canceladas</span></div>' +
+      '<div class="dash-card' + (pendentes.length > 0 ? ' atencao' : '') + '"><span class="dc-num">' + pendentes.length + '</span><span class="dc-rot">Pendentes</span><span class="dc-sub">' + (pendentes.length > 0 ? 'aguardando voc\u00EA' : 'tudo em dia') + '</span></div>' +
+    '</div>';
+
+    // gráfico: próximos 7 dias
+    const nomesDia = ["Dom","Seg","Ter","Qua","Qui","Sex","S\u00E1b"];
+    let maximo = 1;
+    const barras = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(hoje + "T12:00:00"); d.setDate(d.getDate() + i);
+      const iso = isoDe(d);
+      const q = ativos.filter(function (r) { return r.data_reserva === iso; }).length;
+      if (q > maximo) maximo = q;
+      barras.push({ rot: i === 0 ? "Hoje" : nomesDia[d.getDay()], dia: String(d.getDate()).padStart(2, "0"), q: q });
+    }
+    html += '<div class="dash-sec">Pr\u00F3ximos 7 dias</div><div class="dash-graf-card"><div class="dash-graf">';
+    barras.forEach(function (b) {
+      const alt = Math.round((b.q / maximo) * 100);
+      html += '<div class="dg-col">' +
+        '<span class="dg-num">' + (b.q || "") + '</span>' +
+        '<div class="dg-bar' + (b.q === 0 ? ' zero' : '') + '" style="height:' + Math.max(alt, 4) + '%"></div>' +
+        '<span class="dg-lab">' + b.rot + '<br>' + b.dia + '</span>' +
+      '</div>';
     });
-    navigator.clipboard.writeText(tsv).then(function () {
-      window.open("https://sheets.new", "_blank");
-      alert("Dados copiados! Na planilha do Google que abriu, clique na c\u00E9lula A1 e cole com Cmd+V (Mac) ou Ctrl+V.");
-    }).catch(function () {
-      alert("N\u00E3o foi poss\u00EDvel copiar os dados automaticamente. Tente de novo.");
+    html += '</div></div>';
+
+    // áreas neste mês
+    const porArea = {};
+    doMes.forEach(function (r) {
+      const a = r.area || "Sem \u00E1rea definida";
+      porArea[a] = (porArea[a] || 0) + 1;
     });
+    html += '<div class="dash-sec">\u00C1reas neste m\u00EAs</div><div class="resumo-areas">';
+    const chavesArea = Object.keys(porArea);
+    if (chavesArea.length === 0) {
+      html += '<span class="ra-item">Ainda sem reservas no m\u00EAs</span>';
+    } else {
+      chavesArea.sort(function (a, b) { return porArea[b] - porArea[a]; }).forEach(function (a) {
+        html += '<span class="ra-item">' + escapar(a) + ': <strong>' + porArea[a] + '</strong></span>';
+      });
+    }
+    html += '</div>';
+
+    lista.innerHTML = html;
   }
 
   // ===== CLIENTES (HISTÓRICO) =====
@@ -984,6 +1099,91 @@
       alert("Não foi possível atualizar. Faça login de novo e tente outra vez.");
       botao.disabled = false;
     }
+  }
+
+  // ===== VIGIA DE NOVAS RESERVAS =====
+  let idsConhecidos = null;
+  let contextoAudio = null;
+  const tituloOriginal = document.title;
+
+  setInterval(verificarNovas, 30000); // checa a cada 30 segundos
+
+  async function verificarNovas() {
+    if (!tokenAcesso) return;
+    try {
+      const resp = await fetch(
+        SUPABASE_URL + "/rest/v1/reservas?select=*&order=data_reserva.asc,horario.asc",
+        { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + tokenAcesso } }
+      );
+      if (resp.status === 401) { voltarAoLogin(); return; }
+      if (!resp.ok) return;
+      const dados = await resp.json();
+      const novas = idsConhecidos
+        ? dados.filter(function (r) { return !idsConhecidos.has(r.id); })
+        : [];
+      reservas = dados;
+      idsConhecidos = new Set(dados.map(function (r) { return r.id; }));
+      if (novas.length > 0) {
+        avisarNovaReserva(novas);
+        desenharLista();
+      }
+    } catch (e) {}
+  }
+
+  function avisarNovaReserva(novas) {
+    const r = novas[novas.length - 1];
+    const corpo = r.nome.split(" ")[0] + " \u2014 " + formatarData(r.data_reserva) + " \u00E0s " + r.horario.slice(0, 5) +
+      (r.area ? " \u00B7 " + r.area : "");
+
+    // toast na tela
+    let toast = document.getElementById("toast-nova");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "toast-nova";
+      toast.addEventListener("click", function () { toast.style.display = "none"; });
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = '<div class="t-titulo">\uD83D\uDD14 ' +
+      (novas.length === 1 ? "Nova reserva!" : novas.length + " novas reservas!") + '</div>' +
+      '<div class="t-corpo">' + escapar(corpo) + '</div>';
+    toast.style.display = "block";
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(function () { toast.style.display = "none"; }, 10000);
+
+    // som de sino
+    tocarSom();
+
+    // título da aba pisca
+    document.title = "\uD83D\uDD14 " + (novas.length === 1 ? "Nova reserva!" : novas.length + " novas reservas!");
+
+    // notificação do navegador (funciona até com a aba em segundo plano)
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification("\uD83D\uDD14 Nova reserva \u2014 Boi na Brasa", { body: corpo, icon: "logo.png" });
+      } catch (e) {}
+    }
+  }
+
+  window.addEventListener("focus", function () { document.title = tituloOriginal; });
+
+  function tocarSom() {
+    try {
+      if (!contextoAudio) contextoAudio = new (window.AudioContext || window.webkitAudioContext)();
+      if (contextoAudio.state === "suspended") contextoAudio.resume();
+      const agora = contextoAudio.currentTime;
+      [880, 1108.7].forEach(function (freq, i) {
+        const osc = contextoAudio.createOscillator();
+        const vol = contextoAudio.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        vol.gain.setValueAtTime(0.0001, agora + i * 0.18);
+        vol.gain.exponentialRampToValueAtTime(0.25, agora + i * 0.18 + 0.02);
+        vol.gain.exponentialRampToValueAtTime(0.0001, agora + i * 0.18 + 0.45);
+        osc.connect(vol); vol.connect(contextoAudio.destination);
+        osc.start(agora + i * 0.18);
+        osc.stop(agora + i * 0.18 + 0.5);
+      });
+    } catch (e) {}
   }
 </script>
 
