@@ -408,6 +408,23 @@
   }
   .criada{font-size:.8rem;color:var(--cinza);margin-top:5px;opacity:.85}
 
+  /* ---------- DASHBOARD CLICÁVEL ---------- */
+  .dash-card.clicavel{cursor:pointer;transition:transform .15s, box-shadow .2s, border-color .15s}
+  .dash-card.clicavel:hover{
+    transform:translateY(-4px);
+    border-color:var(--amarelo);
+    box-shadow:0 12px 28px rgba(232,100,27,.22);
+  }
+  .dg-col.clicavel{cursor:pointer}
+  .dg-col.clicavel:hover .dg-bar{filter:brightness(1.3)}
+  .dg-col.clicavel:hover .dg-lab{color:var(--amarelo)}
+  .ra-item.clicavel{cursor:pointer;transition:border-color .15s, background .15s}
+  .ra-item.clicavel:hover{border-color:var(--amarelo);background:rgba(247,179,43,.12)}
+  .dash-dica{margin-top:16px;color:var(--cinza);font-size:.82rem;opacity:.8}
+  .nome-cliente[data-tel]{cursor:pointer;width:fit-content}
+  .nome-cliente[data-tel]:hover{color:var(--amarelo);text-decoration:underline;text-underline-offset:3px}
+  @media (prefers-reduced-motion: reduce){.dash-card.clicavel{transition:none}}
+
   /* ---------- AVISO DE NOVA RESERVA ---------- */
   #toast-nova{
     position:fixed;top:18px;right:18px;z-index:200;
@@ -640,6 +657,7 @@
       document.querySelectorAll(".filtro").forEach(function (x) { x.classList.remove("ativo"); });
       b.classList.add("ativo");
       filtroAtual = b.dataset.filtro;
+      dashDetalhe = null;
       desenharLista();
     });
   });
@@ -754,7 +772,7 @@
       div.innerHTML =
         '<div class="info-reserva">' +
           '<span class="badge ' + r.status + '">' + r.status + '</span>' +
-          '<div class="nome-cliente">' + escapar(r.nome) + '</div>' +
+          '<div class="nome-cliente" data-tel="' + telLimpo + '" title="Ver hist\u00F3rico do cliente">' + escapar(r.nome) + '</div>' +
           '<div class="detalhes"><strong>' + formatarData(r.data_reserva) + '</strong> às <strong>' + r.horario.slice(0,5) + '</strong> · ' + r.num_pessoas + ' pessoa(s) · ' + escapar(r.telefone) + (r.area ? ' · <span class="area-info">' + escapar(r.area) + '</span>' : '') + '</div>' +
           (r.observacoes ? '<div class="obs">\u201C' + escapar(r.observacoes) + '\u201D</div>' : '') +
           (vezes > 1 ? '<div class="fiel">' + E_ESTRELA + ' Cliente com ' + vezes + ' reservas conosco</div>' : '') +
@@ -779,6 +797,14 @@
           janelaWhats = window.open("about:blank", "_blank");
         }
         mudarStatus(b.dataset.id, b.dataset.acao, b, janelaWhats);
+      });
+    });
+
+    // clique no nome do cliente abre o histórico dele
+    lista.querySelectorAll(".nome-cliente[data-tel]").forEach(function (n) {
+      n.addEventListener("click", function () {
+        irParaFiltro("clientes");
+        desenharHistorico(n.dataset.tel);
       });
     });
   }
@@ -912,7 +938,57 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
+  let dashDetalhe = null;
+
+  function irParaFiltro(f) {
+    filtroAtual = f;
+    document.querySelectorAll(".filtro").forEach(function (x) {
+      x.classList.toggle("ativo", x.dataset.filtro === f);
+    });
+    desenharLista();
+  }
+
+  function irParaCalendarioDia(iso) {
+    mesCal = iso.slice(0, 7);
+    diaEscolhido = iso;
+    irParaFiltro("calendario");
+  }
+
+  function desenharDashDetalhe() {
+    const itens = dashDetalhe.itens.slice().sort(function (a, b) {
+      return (a.data_reserva + a.horario).localeCompare(b.data_reserva + b.horario);
+    });
+    contador.textContent = itens.length + (itens.length === 1 ? " reserva" : " reservas");
+    vazio.style.display = itens.length === 0 ? "block" : "none";
+
+    let html = '<button class="filtro" id="dash-voltar" style="margin-bottom:16px">\u2190 Voltar ao dashboard</button>' +
+      '<div class="cal-dia-titulo" style="margin-top:0">' + dashDetalhe.titulo + '</div>';
+
+    if (itens.length > 0) {
+      const porArea = {};
+      itens.forEach(function (r) {
+        const a = r.area || "Sem \u00E1rea definida";
+        porArea[a] = (porArea[a] || 0) + 1;
+      });
+      html += '<div class="resumo-areas">';
+      Object.keys(porArea).sort(function (x, y) { return porArea[y] - porArea[x]; }).forEach(function (a) {
+        html += '<span class="ra-item">' + escapar(a) + ': <strong>' + porArea[a] + '</strong></span>';
+      });
+      html += '</div>';
+    }
+
+    lista.innerHTML = html;
+    itens.forEach(function (r) { lista.appendChild(montarCartao(r)); });
+    ligarBotoes();
+    document.getElementById("dash-voltar").addEventListener("click", function () {
+      dashDetalhe = null;
+      desenharDashboard();
+    });
+  }
+
   function desenharDashboard() {
+    if (dashDetalhe) { desenharDashDetalhe(); return; }
+
     const hoje = dataHojeISO();
     const ativos = reservas.filter(function (r) { return r.status !== "cancelada"; });
 
@@ -933,10 +1009,10 @@
     vazio.style.display = "none";
 
     let html = '<div class="dash-grid">' +
-      '<div class="dash-card"><span class="dc-num">' + deHoje.length + '</span><span class="dc-rot">Hoje</span><span class="dc-sub">' + pessoasHoje + ' pessoa(s)</span></div>' +
-      '<div class="dash-card"><span class="dc-num">' + daSemana.length + '</span><span class="dc-rot">Esta semana</span><span class="dc-sub">' + formatarData(iniISO).slice(0,5) + ' a ' + formatarData(fimISO).slice(0,5) + '</span></div>' +
-      '<div class="dash-card"><span class="dc-num">' + doMes.length + '</span><span class="dc-rot">Este m\u00EAs</span><span class="dc-sub">sem contar canceladas</span></div>' +
-      '<div class="dash-card' + (pendentes.length > 0 ? ' atencao' : '') + '"><span class="dc-num">' + pendentes.length + '</span><span class="dc-rot">Pendentes</span><span class="dc-sub">' + (pendentes.length > 0 ? 'aguardando voc\u00EA' : 'tudo em dia') + '</span></div>' +
+      '<div class="dash-card clicavel" id="dash-hoje" title="Ver o dia de hoje no calend\u00E1rio"><span class="dc-num">' + deHoje.length + '</span><span class="dc-rot">Hoje</span><span class="dc-sub">' + pessoasHoje + ' pessoa(s)</span></div>' +
+      '<div class="dash-card clicavel" id="dash-semana" title="Ver as reservas da semana"><span class="dc-num">' + daSemana.length + '</span><span class="dc-rot">Esta semana</span><span class="dc-sub">' + formatarData(iniISO).slice(0,5) + ' a ' + formatarData(fimISO).slice(0,5) + '</span></div>' +
+      '<div class="dash-card clicavel" id="dash-mes" title="Ver as reservas do m\u00EAs"><span class="dc-num">' + doMes.length + '</span><span class="dc-rot">Este m\u00EAs</span><span class="dc-sub">sem contar canceladas</span></div>' +
+      '<div class="dash-card clicavel' + (pendentes.length > 0 ? ' atencao' : '') + '" id="dash-pend" title="Ver as pendentes"><span class="dc-num">' + pendentes.length + '</span><span class="dc-rot">Pendentes</span><span class="dc-sub">' + (pendentes.length > 0 ? 'aguardando voc\u00EA' : 'tudo em dia') + '</span></div>' +
     '</div>';
 
     // gráfico: próximos 7 dias
@@ -948,12 +1024,12 @@
       const iso = isoDe(d);
       const q = ativos.filter(function (r) { return r.data_reserva === iso; }).length;
       if (q > maximo) maximo = q;
-      barras.push({ rot: i === 0 ? "Hoje" : nomesDia[d.getDay()], dia: String(d.getDate()).padStart(2, "0"), q: q });
+      barras.push({ iso: iso, rot: i === 0 ? "Hoje" : nomesDia[d.getDay()], dia: String(d.getDate()).padStart(2, "0"), q: q });
     }
     html += '<div class="dash-sec">Pr\u00F3ximos 7 dias</div><div class="dash-graf-card"><div class="dash-graf">';
     barras.forEach(function (b) {
       const alt = Math.round((b.q / maximo) * 100);
-      html += '<div class="dg-col">' +
+      html += '<div class="dg-col' + (b.q > 0 ? ' clicavel' : '') + '" data-data="' + b.iso + '"' + (b.q > 0 ? ' title="Ver o dia no calend\u00E1rio"' : '') + '>' +
         '<span class="dg-num">' + (b.q || "") + '</span>' +
         '<div class="dg-bar' + (b.q === 0 ? ' zero' : '') + '" style="height:' + Math.max(alt, 4) + '%"></div>' +
         '<span class="dg-lab">' + b.rot + '<br>' + b.dia + '</span>' +
@@ -973,12 +1049,38 @@
       html += '<span class="ra-item">Ainda sem reservas no m\u00EAs</span>';
     } else {
       chavesArea.sort(function (a, b) { return porArea[b] - porArea[a]; }).forEach(function (a) {
-        html += '<span class="ra-item">' + escapar(a) + ': <strong>' + porArea[a] + '</strong></span>';
+        html += '<span class="ra-item clicavel" data-area="' + escapar(a) + '" title="Ver as reservas desta \u00E1rea">' + escapar(a) + ': <strong>' + porArea[a] + '</strong></span>';
       });
     }
     html += '</div>';
+    html += '<p class="dash-dica">Toque nos cart\u00F5es, nas barras do gr\u00E1fico e nas \u00E1reas para abrir os detalhes. Nos cart\u00F5es de reserva, clique no nome do cliente para ver o hist\u00F3rico.</p>';
 
     lista.innerHTML = html;
+
+    // cliques do dashboard
+    document.getElementById("dash-hoje").addEventListener("click", function () { irParaCalendarioDia(hoje); });
+    document.getElementById("dash-pend").addEventListener("click", function () { irParaFiltro("pendente"); });
+    document.getElementById("dash-semana").addEventListener("click", function () {
+      dashDetalhe = { titulo: "Reservas desta semana \u00B7 " + formatarData(iniISO).slice(0,5) + " a " + formatarData(fimISO).slice(0,5), itens: daSemana };
+      desenharDashboard();
+    });
+    document.getElementById("dash-mes").addEventListener("click", function () {
+      dashDetalhe = { titulo: "Reservas deste m\u00EAs", itens: doMes };
+      desenharDashboard();
+    });
+    lista.querySelectorAll(".dg-col.clicavel").forEach(function (c) {
+      c.addEventListener("click", function () { irParaCalendarioDia(c.dataset.data); });
+    });
+    lista.querySelectorAll(".ra-item.clicavel").forEach(function (ch) {
+      ch.addEventListener("click", function () {
+        const alvo = ch.dataset.area;
+        dashDetalhe = {
+          titulo: alvo + " \u00B7 neste m\u00EAs",
+          itens: doMes.filter(function (r) { return (r.area || "Sem \u00E1rea definida") === alvo; })
+        };
+        desenharDashboard();
+      });
+    });
   }
 
   // ===== CLIENTES (HISTÓRICO) =====
