@@ -373,6 +373,53 @@
     font-size:.92rem;margin-top:16px;
   }
 
+  /* ---------- CONFIRMAÇÃO DO WHATSAPP ---------- */
+  .cz-fundo{
+    position:fixed;inset:0;z-index:100;
+    background:rgba(14,11,8,.82);
+    backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .cz-fundo[hidden]{display:none}
+  .cz-caixa{
+    background:linear-gradient(180deg,var(--carvao),#15100C);
+    border:1px solid rgba(247,179,43,.45);
+    border-radius:16px;
+    padding:30px 26px 24px;
+    max-width:430px;width:100%;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+    animation:entrar .25s ease-out both;
+  }
+  .cz-titulo{
+    font-family:'Alfa Slab One',serif;font-weight:400;
+    font-size:1.3rem;margin-bottom:8px;
+  }
+  .cz-texto{color:var(--cinza);font-size:.98rem;margin-bottom:18px}
+  .cz-numero{
+    font-family:'Alfa Slab One',serif;font-weight:400;
+    font-size:1.7rem;letter-spacing:1px;
+    color:var(--amarelo);
+    background:var(--fumaca);
+    border:1px dashed rgba(247,179,43,.55);
+    border-radius:10px;
+    padding:14px 10px;
+    margin-bottom:8px;
+  }
+  .cz-aviso{color:var(--cinza);font-size:.85rem;margin-bottom:18px}
+  .cz-caixa .btn-enviar{margin-bottom:10px}
+  .cz-corrigir{
+    width:100%;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;font-size:1.05rem;
+    text-transform:uppercase;letter-spacing:1.8px;
+    background:transparent;color:var(--cinza);
+    border:1px solid rgba(184,172,156,.4);
+    border-radius:6px;padding:12px;cursor:pointer;
+  }
+  .cz-corrigir:hover{color:var(--amarelo);border-color:var(--amarelo)}
+
   /* ---------- RODAPÉ ---------- */
   footer{
     border-top:1px solid rgba(247,179,43,.16);
@@ -540,6 +587,17 @@
   </div>
 </section>
 
+<div id="confirma-zap" class="cz-fundo" hidden>
+  <div class="cz-caixa">
+    <div class="cz-titulo">&#x1F4F1; Esse &eacute; seu WhatsApp?</div>
+    <p class="cz-texto">A confirma&ccedil;&atilde;o da sua reserva vai chegar nesse n&uacute;mero. D&aacute; uma conferida com calma:</p>
+    <div class="cz-numero" id="cz-numero"></div>
+    <p class="cz-aviso">Se estiver errado, n&atilde;o conseguimos falar com voc&ecirc;.</p>
+    <button type="button" class="btn-enviar" id="cz-sim">Est&aacute; certo, pode reservar</button>
+    <button type="button" class="cz-corrigir" id="cz-corrigir">Corrigir n&uacute;mero</button>
+  </div>
+</div>
+
 <footer>
   <div class="container">
     <img src="logo.png" alt="" class="logo-footer">
@@ -591,6 +649,52 @@
       return;
     }
 
+    // confere o WhatsApp antes de enviar
+    mostrarConfirmacaoZap(telefone);
+  });
+
+  function formatarZap(tel) {
+    const d = tel.replace(/\D/g, "");
+    if (d.length === 11) return "(" + d.slice(0, 2) + ") " + d.slice(2, 3) + " " + d.slice(3, 7) + "-" + d.slice(7);
+    if (d.length === 10) return "(" + d.slice(0, 2) + ") " + d.slice(2, 6) + "-" + d.slice(6);
+    return tel;
+  }
+
+  const czFundo = document.getElementById("confirma-zap");
+
+  function mostrarConfirmacaoZap(tel) {
+    document.getElementById("cz-numero").textContent = formatarZap(tel);
+    czFundo.hidden = false;
+  }
+
+  function fecharConfirmacaoZap() {
+    czFundo.hidden = true;
+  }
+
+  document.getElementById("cz-corrigir").addEventListener("click", function () {
+    fecharConfirmacaoZap();
+    const campoTel = document.getElementById("telefone");
+    campoTel.focus();
+    campoTel.select();
+    campoTel.scrollIntoView({ block: "center", behavior: "smooth" });
+  });
+
+  czFundo.addEventListener("click", function (e) {
+    if (e.target === czFundo) fecharConfirmacaoZap();
+  });
+
+  document.getElementById("cz-sim").addEventListener("click", enviarReserva);
+
+  async function enviarReserva() {
+    fecharConfirmacaoZap();
+    const nome = document.getElementById("nome").value.trim();
+    const telefone = document.getElementById("telefone").value.trim();
+    const data = campoData.value;
+    const horario = document.getElementById("horario").value;
+    const area = document.getElementById("area").value;
+    const pessoas = document.getElementById("pessoas").value;
+    const obs = document.getElementById("obs").value.trim();
+
     botao.disabled = true;
     botao.textContent = "Enviando...";
 
@@ -628,7 +732,7 @@
       botao.disabled = false;
       botao.textContent = "Confirmar reserva " + E_FOGO;
     }
-  });
+  }
 
   // ===== ANIMAÇÃO AO ROLAR A PÁGINA =====
   const podeAnimar = !matchMedia("(prefers-reduced-motion: reduce)").matches;
